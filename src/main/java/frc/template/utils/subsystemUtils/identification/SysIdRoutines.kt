@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.RobotController
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import net.tecdroid.subsystems.util.generic.MeasurableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
 
 class SysIdRoutines(
