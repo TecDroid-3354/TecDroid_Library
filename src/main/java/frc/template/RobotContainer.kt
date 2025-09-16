@@ -2,10 +2,7 @@ package frc.template
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.Trigger
-import frc.template.Constants.OperatorConstants
-import frc.template.commands.Autos
-import frc.template.commands.ExampleCommand
-import frc.template.subsystems.ExampleSubsystem
+import net.tecdroid.constants.GenericConstants
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -21,13 +18,12 @@ import frc.template.subsystems.ExampleSubsystem
 object RobotContainer
 {
     // Replace with CommandPS4Controller or CommandJoystick if needed
-    private val driverController = CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT)
+    private val driverController = CommandXboxController(GenericConstants.driverControllerId.id)
         
     init
     {
         configureBindings()
         // Reference the Autos object so that it is initialized, placing the chooser on the dashboard
-        Autos
     }
 
     /**
@@ -39,11 +35,5 @@ object RobotContainer
      */
     private fun configureBindings()
     {
-        // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-        Trigger { ExampleSubsystem.exampleCondition() }.onTrue(ExampleCommand())
-
-        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-        // cancelling on release.
-        driverController.b().whileTrue(ExampleSubsystem.exampleMethodCommand())
     }
 }

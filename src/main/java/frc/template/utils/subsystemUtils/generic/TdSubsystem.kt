@@ -1,6 +1,7 @@
 package net.tecdroid.subsystems.util.generic
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.template.interfaces.VoltageControlledSubsystem
 import net.tecdroid.subsystems.util.identification.GenericSysIdRoutine
 
 abstract class TdSubsystem(name: String): SubsystemBase(name), MeasurableSubsystem, VoltageControlledSubsystem {
