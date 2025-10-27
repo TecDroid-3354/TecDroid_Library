@@ -44,8 +44,8 @@ object KrakenMotors {
      * @param id The ID for the motor controller.
      * @return A [TalonFX] motor controller with the configuration described above. Sticky faults are cleared.
      */
-    fun createDefaultTalon(id: NumericId): TalonFX {
-        val talon = TalonFX(id.id)
+    fun createDefaultTalon(id: NumericId, canBusName: String? = "rio"): TalonFX {
+        val talon = TalonFX(id.id, canBusName)
         talon.clearStickyFaults()
         talon.configurator.apply(defaultConfig)
         return talon
@@ -68,9 +68,9 @@ object KrakenMotors {
      */
     fun createTalonWithFullConfig(id: NumericId, motorOutputs: MotorOutputConfigs?, currentLimits: CurrentLimitsConfigs?,
                                   slot0: Slot0Configs?, reduction: Reduction?, angularMotionTargets: AngularMotionTargets?,
-                                  linearMotionTargets: LinearMotionTargets?, sprocket: Sprocket?)
+                                  linearMotionTargets: LinearMotionTargets?, sprocket: Sprocket?, canBusName: String? = "rio")
     : TalonFX {
-        val talon = TalonFX(id.id)
+        val talon = TalonFX(id.id, canBusName)
         val customConfig = defaultConfig
 
         if (motorOutputs != null) {
@@ -110,8 +110,8 @@ object KrakenMotors {
      */
     fun createTalonWithControlValues(
         id: NumericId, controlValues: ControlGains?, reduction: Reduction?, angularMotionTargets: AngularMotionTargets?,
-        linearMotionTargets: LinearMotionTargets?, sprocket: Sprocket?): TalonFX {
-        val talon = TalonFX(id.id)
+        linearMotionTargets: LinearMotionTargets?, sprocket: Sprocket?, canBusName: String? = "rio"): TalonFX {
+        val talon = TalonFX(id.id, canBusName)
         var customConfig = defaultConfig
 
         if (controlValues != null) {
@@ -139,8 +139,8 @@ object KrakenMotors {
      * @param motorConfig The [TalonFXConfiguration] to apply to the motor.
      * @return A [TalonFX] motor controller with the desired configuration. Sticky faults are cleared.
      */
-    fun createTalonWithCustomConfig(id: NumericId, motorConfig: TalonFXConfiguration): TalonFX {
-        val talon = TalonFX(id.id)
+    fun createTalonWithCustomConfig(id: NumericId, motorConfig: TalonFXConfiguration, canBusName: String? = "rio"): TalonFX {
+        val talon = TalonFX(id.id, canBusName)
 
         talon.clearStickyFaults()
         talon.configurator.apply(motorConfig)
@@ -162,8 +162,8 @@ object KrakenMotors {
      * @see [createTalonWithCustomConfig]
      */
     fun createFollowerTalonWithCustomConfig(followerId: NumericId, masterId: NumericId,
-                                            opposeMaster: Boolean, motorConfig: TalonFXConfiguration): TalonFX {
-        val followerTalon = TalonFX(followerId.id)
+                                            opposeMaster: Boolean, motorConfig: TalonFXConfiguration, canBusName: String? = "rio"): TalonFX {
+        val followerTalon = TalonFX(followerId.id, canBusName)
 
         followerTalon.clearStickyFaults()
         followerTalon.configurator.apply(motorConfig)
