@@ -1,4 +1,4 @@
-package net.tecdroid.subsystems.util.identification
+package frc.template.utils.subsystemUtils.identification
 
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.MutAngle
@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.RobotController
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import net.tecdroid.subsystems.util.generic.TdSubsystem
+import frc.template.utils.subsystemUtils.generic.TdSubsystem
 
 class SysIdRoutines(
     val quasistaticForward: Command,

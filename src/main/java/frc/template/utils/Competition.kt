@@ -1,4 +1,4 @@
-package net.tecdroid.util
+package frc.template.utils
 
 import edu.wpi.first.wpilibj.DriverStation
 

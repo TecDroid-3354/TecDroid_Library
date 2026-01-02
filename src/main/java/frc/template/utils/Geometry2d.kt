@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package net.tecdroid.util
+package frc.template.utils
 
 import edu.wpi.first.units.DistanceUnit
 import edu.wpi.first.units.Units

@@ -1,4 +1,4 @@
-package net.tecdroid.mechanical
+package frc.template.utils.mechanical
 
 import edu.wpi.first.units.Measure
 import edu.wpi.first.units.Unit

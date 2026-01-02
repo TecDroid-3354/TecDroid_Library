@@ -1,4 +1,4 @@
-package net.tecdroid.subsystems.util.generic
+package frc.template.utils.interfaces
 
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
@@ -6,6 +6,7 @@ import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import frc.template.utils.subsystemUtils.generic.TdSubsystem
 
 interface MeasurableSubsystem : VoltageControlledSubsystem {
     val motorPosition: Angle

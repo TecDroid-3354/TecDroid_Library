@@ -1,5 +1,5 @@
 @file:JvmName("Main") // set the compiled Java class name to "Main" rather than "MainKt"
-package frc.template
+package frc.template.core
 
 import edu.wpi.first.wpilibj.RobotBase
 

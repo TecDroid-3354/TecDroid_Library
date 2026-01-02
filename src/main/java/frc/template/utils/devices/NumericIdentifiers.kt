@@ -1,4 +1,4 @@
-package net.tecdroid.util
+package frc.template.utils.devices
 
 data class NumericId(val id: Int) {
 

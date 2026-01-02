@@ -1,11 +1,9 @@
-package net.tecdroid.util
+package frc.template.utils.devices
 
 import edu.wpi.first.units.Units.RotationsPerSecond
-import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
-import net.tecdroid.util.RotationalDirection.Clockwise
-import net.tecdroid.util.RotationalDirection.Counterclockwise
-import net.tecdroid.util.rotations
+import frc.template.utils.devices.RotationalDirection.Clockwise
+import frc.template.utils.devices.RotationalDirection.Counterclockwise
 
 /**
  * Allows grouping the properties of a motor

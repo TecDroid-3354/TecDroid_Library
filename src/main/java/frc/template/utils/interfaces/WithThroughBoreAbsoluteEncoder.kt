@@ -1,7 +1,8 @@
-package net.tecdroid.subsystems.util.generic
+package frc.template.utils.interfaces
 
 import edu.wpi.first.units.measure.Angle
-import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
+import frc.template.utils.devices.ThroughBoreAbsoluteEncoder
+import frc.template.utils.subsystemUtils.generic.TdSubsystem
 
 interface WithThroughBoreAbsoluteEncoder {
     val absoluteEncoder: ThroughBoreAbsoluteEncoder

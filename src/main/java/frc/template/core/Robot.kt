@@ -1,4 +1,4 @@
-package frc.template
+package frc.template.core
 
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.TimedRobot
 import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
-import frc.template.commands.Autos
+import edu.wpi.first.wpilibj2.command.Commands
 
 /**
  * The functions in this object (which basically functions as a singleton class) are called automatically
@@ -26,7 +26,7 @@ object Robot : TimedRobot()
      * the [autonomousInit] method will set it to the value selected in
      *the  AutoChooser on the dashboard.
      */
-    private var autonomousCommand: Command = Autos.defaultAutonomousCommand
+    private var autonomousCommand: Command = Commands.none()
 
     init
     {
@@ -76,7 +76,7 @@ object Robot : TimedRobot()
     {
         // We store the command as a Robot property in the rare event that the selector on the dashboard
         // is modified while the command is running since we need to access it again in teleopInit()
-        autonomousCommand = Autos.selectedAutonomousCommand
+        autonomousCommand = Commands.none()
         autonomousCommand.schedule()
     }
 

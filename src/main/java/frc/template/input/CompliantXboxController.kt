@@ -1,7 +1,7 @@
 package net.tecdroid.input
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
-import net.tecdroid.util.NumericId
+import frc.template.utils.devices.NumericId
 
 /**
  * Overrides the default behavior of existing WPILib controllers in order to follow the team's standard conventions

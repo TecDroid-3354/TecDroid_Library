@@ -1,10 +1,10 @@
-package net.tecdroid.util
+package frc.template.utils.controlProfiles
 
 import edu.wpi.first.units.AngularAccelerationUnit
 import edu.wpi.first.units.LinearAccelerationUnit
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.*
-import net.tecdroid.util.Circle
+import frc.template.utils.Circle
 
 data class ControlGains(
     val p: Double = 0.0,
