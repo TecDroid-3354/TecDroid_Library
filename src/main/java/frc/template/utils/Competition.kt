@@ -11,6 +11,4 @@ object MatchStatus {
 
     val isRedAlliance: Boolean
         get() = alliance == DriverStation.Alliance.Red
-
-
 }

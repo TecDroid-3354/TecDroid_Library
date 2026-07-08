@@ -9,8 +9,7 @@ import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
-import frc.template.utils.subsystemUtils.generic.TdSubsystem
-import frc.template.utils.subsystemUtils.identification.GenericSysIdRoutine
+import frc.robot.utils.subsystemUtils.generic.SysIdSubsystem
 import frc.template.utils.volts
 import org.littletonrobotics.junction.Logger
 
@@ -19,7 +18,7 @@ import org.littletonrobotics.junction.Logger
  * All logic regarding the elevator behaviour should be performed here, as the I/O must receive exclusively orders to
  * pass to either the hardware or simulation, depending on the implementation.
  */
-class Elevator(private val io: ElevatorIO) : TdSubsystem(ElevatorConstants.LogTable.subsystemFolder) {
+class Elevator(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.LogTable.subsystemFolder) {
     /**
      * I/O (Input/Output) variables ([io] passed in constructor). Enables to use different implementations of
      * [ElevatorIO] without modifying this class.
@@ -41,8 +40,6 @@ class Elevator(private val io: ElevatorIO) : TdSubsystem(ElevatorConstants.LogTa
 
     override val power: Double
         get() = io.elevatorMotorPower
-
-    val sysIdRoutines: GenericSysIdRoutine = createIdentificationRoutine()  // Comes form TdSubsystem
 
     /**
      * Motor controller variables. lead motor is used as reference.

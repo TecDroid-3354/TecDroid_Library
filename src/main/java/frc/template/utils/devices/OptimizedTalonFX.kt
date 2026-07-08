@@ -1,48 +1,92 @@
 package frc.template.utils.devices
 
-import com.ctre.phoenix6.StatusSignal
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.Follower
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
+import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.NeutralModeValue
+import edu.wpi.first.units.AngleUnit
+import edu.wpi.first.units.DistanceUnit
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Current
+import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
+import frc.template.utils.Sprocket
 import frc.template.utils.hertz
+import frc.template.utils.mechanical.Reduction
+import frc.template.utils.safety.MeasureLimits
 
-class OpTalonFX(id: NumericId, canBusName: String) {
+class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
 
-    private val  motor = KrakenMotors.createDefaultTalon(id ,canBusName)
+    private val motor = KrakenMotors.createDefaultTalon(id ,canBusName)
     private var isFollower: Boolean = false
 
     private val voltageOutRequest = VoltageOut(0.0)
-    private val motionMagicVoltage = MotionMagicVoltage(0.0)
+    private val motionMagicVoltageRequest = MotionMagicVoltage(0.0)
+    private val motionMagicVelocityRequest = MotionMagicVelocityVoltage(0.0)
 
-    var position: StatusSignal<Angle> = motor.position
-    var velocity: StatusSignal<AngularVelocity> =  motor.velocity
-    var outputVoltage: StatusSignal<Voltage> = motor.motorVoltage
-    var supplyCurrent: StatusSignal<Current> = motor.supplyCurrent
-    var power: () -> Double = { motor.get() }
-    var isConnected: () -> Boolean = { motor.isConnected }
+    private val COMMAND_TO_FOLLOWER_TALON_EXCEPTION = IllegalCallerException("Tried to command a follower TalonFX [$id]. Use the lead TalonFX.")
 
     init {
         optimizeMotorCan()
     }
 
+    fun getPosition(): Angle { return motor.position.value }
+    fun getVelocity(): AngularVelocity { return motor.velocity.value }
+    fun getOutputVoltage(): Voltage { return motor.motorVoltage.value }
+    fun getSupplyCurrent(): Current { return motor.supplyCurrent.value }
+    fun getPower(): Double { return motor.get() }
+    fun getIsConnected(): Boolean { return motor.isConnected }
+
     fun voltageRequest(voltage: Voltage) {
-        if (isFollower) { throw IllegalCallerException("Tried to command a follower TalonFX. Use the lead TalonFX.")}
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
         motor.setControl(voltageOutRequest.withOutput(voltage))
     }
 
-    fun positionRequest(position: Angle) {
-        if (isFollower) { throw IllegalCallerException("Tried to command a follower TalonFX. Use the lead TalonFX.") }
-        motor.setControl(motionMagicVoltage.withPosition(position))
+    fun velocityRequest(velocity: AngularVelocity) {
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
+        motor.setControl(motionMagicVelocityRequest.withVelocity(velocity))
     }
 
-    fun follow(leadingMotorController: TalonFX, opposeMaster: Boolean) {
+    private fun positionRequest(position: Angle, slot: Int) {
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
+        motor.setControl(motionMagicVoltageRequest.withPosition(position).withSlot(slot))
+    }
+
+    fun positionRequestSubsystem(position: Angle, limits: MeasureLimits<AngleUnit>, reduction: Reduction,
+                                 slot: Int = 0) {
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
+        val subsystemClampedAngle: Angle = limits.coerceIn(position) as Angle
+        val motorTransformedAngle: Angle = reduction.unapply(subsystemClampedAngle)
+        positionRequest(motorTransformedAngle, slot)
+    }
+
+    fun positionRequestSubsystem(displacement: Distance, limits: MeasureLimits<DistanceUnit>, reduction: Reduction,
+                                 sprocket: Sprocket, slot: Int = 0) {
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
+        val subsystemClampedDisplacement: Distance = limits.coerceIn(displacement) as Distance
+        val requestedLinearDisplacementToAngularDisplacement: Angle =
+            sprocket.linearDisplacementToAngularDisplacement(subsystemClampedDisplacement)
+        val motorTransformedAngle: Angle = reduction.unapply(requestedLinearDisplacementToAngularDisplacement)
+        positionRequest(motorTransformedAngle, slot)
+    }
+
+    fun stopMotor() {
+        if (isFollower) { throw COMMAND_TO_FOLLOWER_TALON_EXCEPTION }
+
+        motor.stopMotor()
+    }
+
+    fun follow(leadingMotorController: TalonFX, opposeMaster: MotorAlignmentValue) {
         isFollower = true
         motor.setControl(Follower(leadingMotorController.deviceID, opposeMaster))
     }
@@ -52,20 +96,27 @@ class OpTalonFX(id: NumericId, canBusName: String) {
         motor.configurator.apply(config)
     }
 
+    fun getMotorId(): Int {
+        return motor.deviceID
+    }
+
     fun getMotorInstance(): TalonFX {
         return motor
     }
 
     private fun optimizeMotorCan() {
+        motor.optimizeBusUtilization()
         with(motor) {
             position.setUpdateFrequency(100.0.hertz)
             velocity.setUpdateFrequency(100.0.hertz)
-            motorVoltage.setUpdateFrequency(100.0.hertz)
+            motorVoltage.setUpdateFrequency(100.0.hertz)    // Required by followers (Phoenix 6 documentation)
             supplyCurrent.setUpdateFrequency(100.0.hertz)
             acceleration.setUpdateFrequency(50.0.hertz)
-            controlMode.setUpdateFrequency(10.0.hertz)
+            controlMode.setUpdateFrequency(100.0.hertz)
+            dutyCycle.setUpdateFrequency(100.0.hertz)       // Required by followers (Phoenix 6 documentation)
+            torqueCurrent.setUpdateFrequency(100.0.hertz)   // Required by followers (Phoenix 6 documentation)
+            version.setUpdateFrequency(100.0.hertz)
         }
-        motor.optimizeBusUtilization()
     }
 
     fun coast() {

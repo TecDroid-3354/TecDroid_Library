@@ -2,18 +2,16 @@ package frc.template.subsystems.elevator
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.signals.InvertedValue
+import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import edu.wpi.first.units.DistanceUnit
 import edu.wpi.first.units.measure.Distance
 import frc.template.utils.mechanical.Reduction
 import frc.template.utils.safety.MeasureLimits
-import frc.template.utils.devices.CanId
 import frc.template.utils.controlProfiles.ControlGains
 import frc.template.utils.controlProfiles.LinearMotionTargets
 import frc.template.utils.Sprocket
-import frc.template.utils.controlProfiles.LoggedTunableNumber
 import frc.template.utils.devices.KrakenMotors
-import frc.template.utils.devices.RotationalDirection
 import frc.template.utils.inches
 import frc.template.utils.metersPerSecond
 import frc.template.utils.seconds
@@ -29,8 +27,8 @@ object ElevatorConstants {
      */
     object Identification {
         val elevatorCanBusName = "canBus"
-        val leadMotorId = CanId(0)
-        val followerMotorId = CanId(0)
+        val leadMotorId = 0
+        val followerMotorId = 0
     }
     /**
      * All constants that have physical contact with the elevator
@@ -58,14 +56,15 @@ object ElevatorConstants {
 
     object TalonFXMotors {
         private val defaultNeutralMode: NeutralModeValue = NeutralModeValue.Brake
-        private val invertedValue: InvertedValue = RotationalDirection.Counterclockwise.toInvertedValue()
+        private val invertedValue: InvertedValue = InvertedValue.CounterClockwise_Positive
 
-        val followerOpposesMaster: Boolean = false
+        val followerAlignmentValue: MotorAlignmentValue = MotorAlignmentValue.Aligned
 
         var motorsConfig: TalonFXConfiguration = KrakenMotors.createTalonFXConfiguration(
             Optional.of(KrakenMotors.configureMotorOutputs(defaultNeutralMode, invertedValue)),
             Optional.empty(), // Stay with the default CurrentLimits configuration
             Optional.of(KrakenMotors.configureSlot0(Control.gains)),
+            Optional.empty(),
             Optional.of(KrakenMotors.configureLinearMotionMagic(Control.motionTargets,
                                                                 Mechanical.reduction, Mechanical.sprocket))
         )
