@@ -3,8 +3,6 @@ package frc.tecdroid3354.subsystems.angularVelocityTemplate;
 import edu.wpi.first.units.measure.*;
 import org.littletonrobotics.junction.AutoLog;
 
-import java.util.function.Supplier;
-
 import static edu.wpi.first.units.Units.*;
 
 /**
@@ -93,12 +91,27 @@ public interface FlywheelIO {
      * @param kI Obtained live through Elastic.
      * @param kD Obtained live through Elastic.
      * @param kF Obtained live through Elastic.
+     * @param slot Which PIDF gains to update [0, 1]
      */
-    void updateFlywheelMotorsPIDF(double kP, double kI, double kD, double kF);
+    void updateFlywheelMotorsPIDF(double kP, double kI, double kD, double kF, int slot);
+
+    /**
+     * Same as {@link #updateFlywheelMotorsPIDF(double, double, double, double, int)}, but defaults the
+     * parameter 'slot' to 0. Note that the aforementioned method must be implemented.
+     * @param kP Obtained live through Elastic.
+     * @param kI Obtained live through Elastic.
+     * @param kD Obtained live through Elastic.
+     * @param kF Obtained live through Elastic.
+     */
+    default void updateFlywheelMotorsPIDF(double kP, double kI, double kD, double kF) {
+        updateFlywheelMotorsPIDF(kP, kI, kD, kF, 0);
+    }
 
     /**
      * Sets the flywheel to the manually set velocity through Elastic. This resets with every code reload.
-     * @return
+     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
+     * @see #updateFlywheelManualVelocity(AngularVelocity)
+     * @return A {@link Runnable} setting the flywheel manual target velocity
      */
     Runnable enableFlywheelManualVelocity();
 
@@ -106,21 +119,24 @@ public interface FlywheelIO {
      * Only if applicable.
      * <p>Sets the flywheel to the preset velocity stored in constants.</p>
      * <p>This does not change live, only in-code.</p>
-     * @return
+     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
+     * @return A {@link Runnable} setting the flywheel preset target velocity
      */
     Runnable enableFlywheelPresetVelocity();
 
     /**
-     * Only if applicable.
-     * <p>Sets the calculated flywheel velocity based on distance to target, i.e. through interpolation / polynomial</p>
-     * <p>Needs to take the interpolation object or polynomial coefficients and feed them the distance to target</p>
-     * @param flywheelDistanceToTarget Differs from robot distance to target; account for offsets from robot center.
-     * @return
+     * Only if applicable. For distance based / state based flywheels specifically.
+     * <p>Sets the calculated flywheel velocity, i.e. through interpolation / polynomial</p>
+     * <p>Calculation is delegated to a separate method</p>
+     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
+     * @param flywheelCalculatedVelocity Flywheel velocity; must be calculated beforehand.
+     * @return A {@link Runnable} setting the flywheel calculated target velocity
      */
-    Runnable enableFlywheelCalculatedVelocity(Distance flywheelDistanceToTarget);
+    Runnable enableFlywheelCalculatedVelocity(AngularVelocity flywheelCalculatedVelocity);
 
     /**
      * Disables the flywheel motors.
+     * @return A {@link Runnable} stopping the flywheel
      */
     Runnable stopFlywheel();
 
@@ -133,16 +149,18 @@ public interface FlywheelIO {
 
     /**
      * Merely changes the Neutral / Idle mode of the motors to coast for easier manipulation.
+     * @return A {@link Runnable} coasting all flywheel motors
      */
     Runnable coastFlywheelMotors();
 
     /**
      * Merely changes the Neutral / Idle mode of the motors to brake to avoid unintended movement during match.
+     * @return A {@link Runnable} braking all flywheel motors
      */
     Runnable brakeFlywheelMotors();
 
     /**
-     * Applies the configuration inside {@link FlywheelConstants.MotorConfiguration}
+     * Applies the configuration inside {@link FlywheelConstants.MotorConfiguration}. Follower commands are included.
      */
     void initialMotorConfiguration();
 }

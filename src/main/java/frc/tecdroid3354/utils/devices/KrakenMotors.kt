@@ -39,7 +39,7 @@ object KrakenMotors {
             CurrentLimits
                 .withSupplyCurrentLimitEnable(true)
                 .withSupplyCurrentLimit(40.0.amps)
-                .withStatorCurrentLimitEnable(false)
+                .withStatorCurrentLimitEnable(true)
                 .withStatorCurrentLimit(120.0.amps)
         }
     }
@@ -102,32 +102,31 @@ object KrakenMotors {
      * configurations.
      * @param neutralModeValue The desired [NeutralModeValue], either Brake or Coast.
      * @param invertedValue The desired [InvertedValue], either CounterClockwise_Positive or Clockwise_Positive.
-     * @param peakDutyCycle (optional) The maximum duty cycle output for the motors. Keep this value positive, it is automatically
-     *          changed to negative for peak reverse duty cycle. Values for this parameter are [-1.0, 1.0].
+     * @param peakForwardDutyCycle (optional) The maximum duty cycle output for the motors. Keep this value positive, it is automatically
+     *          changed to negative for peak reverse duty cycle. Values for this parameter are [0.0, 1.0].
      * @return A [MotorOutputConfigs] with the desired [NeutralModeValue] and [InvertedValue].
      */
     fun configureMotorOutputs(neutralModeValue: NeutralModeValue, invertedValue: InvertedValue,
-                              peakDutyCycle: Double = 1.0): MotorOutputConfigs {
+                              peakForwardDutyCycle: Double = 1.0): MotorOutputConfigs {
         return MotorOutputConfigs()
             .withNeutralMode(neutralModeValue)
             .withInverted(invertedValue)
-            .withPeakForwardDutyCycle(MathUtil.clamp(peakDutyCycle, -1.0, 1.0))
-            .withPeakReverseDutyCycle(MathUtil.clamp(peakDutyCycle.unaryMinus(), -1.0, 1.0))
+            .withPeakForwardDutyCycle(MathUtil.clamp(peakForwardDutyCycle, 0.0, 1.0))
+            .withPeakReverseDutyCycle(MathUtil.clamp(peakForwardDutyCycle.unaryMinus(), -1.0, 0.0))
     }
 
     /**
-     * Takes the desired current limits and returns a [CurrentLimitsConfigs] with said configurations. If stator limit
-     * is not desired, type null.
+     * Takes the desired current limits and returns a [CurrentLimitsConfigs] with said configurations.
+     * Both Supply and Stator limits are enabled and must be configured.
      * @param supplyCurrentLimit The desired supply current limit.
-     * @param statorCurrentLimit The desired stator current limit. Optional.
-     * @return A [CurrentLimitsConfigs] with the desired supply and stator current limits, if applicable.
+     * @param statorCurrentLimit The desired stator current limit.
+     * @return A [CurrentLimitsConfigs] with the desired supply and stator current limits.
      */
-    fun configureCurrentLimits(supplyCurrentLimit: Current,
-                               statorCurrentLimitEnabled: Boolean, statorCurrentLimit: Current): CurrentLimitsConfigs {
+    fun configureCurrentLimits(supplyCurrentLimit: Current, statorCurrentLimit: Current): CurrentLimitsConfigs {
         return CurrentLimitsConfigs()
             .withSupplyCurrentLimitEnable(true)
             .withSupplyCurrentLimit(supplyCurrentLimit)
-            .withStatorCurrentLimitEnable(statorCurrentLimitEnabled)
+            .withStatorCurrentLimitEnable(true)
             .withStatorCurrentLimit(statorCurrentLimit)
     }
 

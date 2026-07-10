@@ -44,7 +44,9 @@ class ElevatorIOTalonFX : ElevatorIO {
      * @param inputs The generated [ElevatorIOInputsAutoLogged] object keeping track of everything.
      */
     override fun updateInputs(inputs: ElevatorIO.ElevatorIOInputs) {
-        inputs.elevatorDisplacement.mut_replace(convertMotorToSubsystemDisplacement(leadMotorController.getPosition()))
+        inputs.elevatorDisplacement.mut_replace(leadMotorController.getMotorToLinearSubsystemDisplacement(
+            Mechanical.reduction, Mechanical.sprocket
+        ))
         inputs.elevatorTargetDisplacement.mut_replace(elevatorTargetDisplacement)
 
         inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
@@ -77,24 +79,12 @@ class ElevatorIOTalonFX : ElevatorIO {
     override fun setElevatorTargetDisplacement(elevatorTargetDisplacement: Distance) {
         this.elevatorTargetDisplacement.mut_replace(elevatorTargetDisplacement)
         // MotionMagicVoltage request being used. MotionMagic has to be configured for this to work.
-        leadMotorController.positionRequestSubsystem(
+        leadMotorController.linearSubsystemPositionVoltageRequest(
             elevatorTargetDisplacement,
             ElevatorConstants.Control.limits,
             Mechanical.reduction,
             Mechanical.sprocket,
             0)
-    }
-
-    /**
-     * Only place where some sort of logic is performed in the I/O, yet it still uses only components
-     * from [ElevatorConstants] and the position of the lead motor. Only place to use this: [updateInputs].
-     * TODO() = Can I move this outside of the implementation?
-     * @param motorPosition The current position of the lead motor.
-     */
-    private fun convertMotorToSubsystemDisplacement(motorPosition: Angle): Distance {
-        return Mechanical.sprocket.angularDisplacementToLinearDisplacement(
-            Mechanical.reduction.apply(motorPosition)
-        )
     }
 
     /**

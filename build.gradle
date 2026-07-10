@@ -9,6 +9,7 @@ plugins {
     id "idea"
     // AdvantageKit does not support ksp, despite being faster (metadata not available)
     id "org.jetbrains.kotlin.kapt" version "2.3.0"
+    id "com.peterabeles.gversion" version "1.10" // Generates the BuildConstants file with build info
 }
 
 def javaVersion = JavaVersion.VERSION_17
@@ -124,6 +125,16 @@ wpi.java.configureTestTasks(test)
 tasks.withType(JavaCompile) {
     // Configure string concat to always inline compile
     options.compilerArgs.add '-XDstringConcat=inline'
+}
+
+project.compileJava.dependsOn(createVersionFile)
+gversion {
+    srcDir       = "src/main/java/"
+    classPackage = "frc.tecdroid3354.core"
+    className    = "BuildConstants"
+    dateFormat   = "yyyy-MM-dd HH:mm:ss z"
+    timeZone     = "America/Mexico_City" // Use preferred time zone
+    indent       = "  "
 }
 
 repositories {

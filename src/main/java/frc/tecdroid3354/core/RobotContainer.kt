@@ -1,5 +1,7 @@
 package frc.tecdroid3354.core
 
+import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
@@ -22,6 +24,26 @@ object RobotContainer
     init
     {
         configureBindings()
+    }
+
+    fun robotEnabledConfig() {
+
+    }
+
+    fun robotDisabledConfig() {
+
+    }
+
+    fun robotTeleopInitConfig() {
+
+    }
+
+    fun robotAutoInitConfig() {
+
+    }
+
+    fun getAutonomousCommand(): Command {
+        return Commands.none()
     }
 
     /**
