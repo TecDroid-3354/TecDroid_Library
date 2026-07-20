@@ -6,7 +6,9 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.MutAngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import frc.tecdroid3354.constants.SubsystemsControlGains
-import frc.tecdroid3354.constants.SubsystemsPresetVelocities
+import frc.tecdroid3354.constants.SubsystemsControlRequests
+import frc.tecdroid3354.constants.SubsystemsMovementLimits
+import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.utils.controlProfiles.ControlGains
 import frc.tecdroid3354.utils.devices.KrakenMotors
 import frc.tecdroid3354.utils.devices.OpTalonFX
@@ -38,7 +40,7 @@ class FlywheelIOTalonFX: FlywheelIO {
         inputs.flywheelActualVelocity.mut_replace(leadMotorController.getMotorToAngularSubsystemVelocity(
             FlywheelConstants.Mechanical.REDUCTION
         ))
-        inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetVelocities.flywheel_preset_velocity)
+        inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM)
         inputs.flywheelTargetVelocity.mut_replace(flywheelVelocityTarget)
 
         inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
@@ -73,18 +75,18 @@ class FlywheelIOTalonFX: FlywheelIO {
         if (validatedSlot == 0) { // Update the corresponding Slot Configs
             newMotorsConfig.Slot0 = KrakenMotors.configureSlot0(
                 ControlGains(kP, kI, kD, kF,
-                    SubsystemsControlGains.flywheel_motor_gains.s,
-                    SubsystemsControlGains.flywheel_motor_gains.v,
-                    SubsystemsControlGains.flywheel_motor_gains.a,
-                    SubsystemsControlGains.flywheel_motor_gains.g),
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.s,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.v,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.a,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.g),
             )
         } else {
             newMotorsConfig.Slot1 = KrakenMotors.configureSlot1(
                 ControlGains(kP, kI, kD, kF,
-                    SubsystemsControlGains.flywheel_motor_gains.s,
-                    SubsystemsControlGains.flywheel_motor_gains.v,
-                    SubsystemsControlGains.flywheel_motor_gains.a,
-                    SubsystemsControlGains.flywheel_motor_gains.g),
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.s,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.v,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.a,
+                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.g),
             )
         }
 
@@ -95,32 +97,38 @@ class FlywheelIOTalonFX: FlywheelIO {
     override fun enableFlywheelManualVelocity(): Runnable {
         return {
             flywheelVelocityTarget.mut_replace(manualFlywheelVelocityTarget) // Update target velocity
-            val motorTargetVelocity = leadMotorController.getAngularSubsystemToMotorVelocity( // Convert to motor velocity
-                FlywheelConstants.Mechanical.REDUCTION, manualFlywheelVelocityTarget
-            )
 
-            leadMotorController.velocityTorqueRequest(motorTargetVelocity) // Torque request
+            leadMotorController.angularSubsystemVelocityRequest(
+                SubsystemsControlRequests.FLYWHEEL_CONTROL_TYPE,
+                manualFlywheelVelocityTarget,
+                SubsystemsMovementLimits.FLYWHEEL_VELOCITY_LIMITS,
+                FlywheelConstants.Mechanical.REDUCTION
+            )
         }
     }
 
     override fun enableFlywheelPresetVelocity(): Runnable {
         return {
-            flywheelVelocityTarget.mut_replace(SubsystemsPresetVelocities.flywheel_preset_velocity) // Update target velocity
-            val motorTargetVelocity = leadMotorController.getAngularSubsystemToMotorVelocity( // Convert to motor velocity
-                FlywheelConstants.Mechanical.REDUCTION, SubsystemsPresetVelocities.flywheel_preset_velocity
-            )
+            flywheelVelocityTarget.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM) // Update target velocity
 
-            leadMotorController.velocityTorqueRequest(motorTargetVelocity) // Torque request
+            leadMotorController.angularSubsystemVelocityRequest(
+                SubsystemsControlRequests.FLYWHEEL_CONTROL_TYPE,
+                SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM,
+                SubsystemsMovementLimits.FLYWHEEL_VELOCITY_LIMITS,
+                FlywheelConstants.Mechanical.REDUCTION
+            )
         }
     }
     override fun enableFlywheelCalculatedVelocity(flywheelCalculatedVelocity: AngularVelocity): Runnable {
         return {
             flywheelVelocityTarget.mut_replace(flywheelCalculatedVelocity) // Update target velocity
-            val motorTargetVelocity = leadMotorController.getAngularSubsystemToMotorVelocity( // Convert to motor velocity
-                FlywheelConstants.Mechanical.REDUCTION, flywheelCalculatedVelocity
-            )
 
-            leadMotorController.velocityTorqueRequest(motorTargetVelocity) // Torque request
+            leadMotorController.angularSubsystemVelocityRequest(
+                SubsystemsControlRequests.FLYWHEEL_CONTROL_TYPE,
+                flywheelCalculatedVelocity,
+                SubsystemsMovementLimits.FLYWHEEL_VELOCITY_LIMITS,
+                FlywheelConstants.Mechanical.REDUCTION
+            )
         }
     }
 
@@ -132,7 +140,7 @@ class FlywheelIOTalonFX: FlywheelIO {
 
     override fun setFlywheelSysIdMotorsVoltage(voltage: Voltage): Runnable {
         return {
-            leadMotorController.voltageRequest(voltage)
+            leadMotorController.sysIdVoltageRequest(voltage)
         }
     }
 

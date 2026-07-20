@@ -20,7 +20,10 @@ java {
     targetCompatibility = javaVersion
 }
 
-def ROBOT_MAIN_CLASS = "frc.template.Main"
+/**
+ * Make sure to update this if you move Main.kt outside the core folder (or if you update the folder name / location)
+ */
+def ROBOT_MAIN_CLASS = "frc.tecdroid3354.core.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.

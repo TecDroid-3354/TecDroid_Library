@@ -1,11 +1,11 @@
 package frc.tecdroid3354.subsystems.angularVelocityTemplate
 
-import edu.wpi.first.units.Units
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.robot.utils.subsystemUtils.generic.SysIdSubsystem
 import frc.tecdroid3354.constants.SubsystemsTunableGains
 import frc.tecdroid3354.utils.meters
@@ -13,30 +13,9 @@ import frc.tecdroid3354.utils.rotationsPerMinute
 import org.littletonrobotics.junction.Logger
 import kotlin.math.pow
 
-class FlywheelSubsystem(private val io: FlywheelIO) : SysIdSubsystem(FlywheelConstants.Telemetry.SUBSYSTEM_TAB) {
+class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelConstants.Telemetry.SUBSYSTEM_TAB) {
     // Auto generated file (by @AutoLog annotation in FlywheelIOInputs)
     private val inputs: FlywheelIOInputsAutoLogged = FlywheelIOInputsAutoLogged()
-
-    /**
-     * START OF SYS ID VARIABLES / METHODS
-     */
-    override val sysIdForwardRunningCondition: () -> Boolean
-        get() = { true }
-    override val sysIdBackwardRunningCondition: () -> Boolean
-        get() = { true }
-    override val motorPosition: Angle
-        get() = { inputs.leadMotorPosition } as Angle
-    override val motorVelocity: AngularVelocity
-        get() = { inputs.leadMotorVelocity } as AngularVelocity
-    override val power: Double
-        get() = { inputs.leadMotorPower } as Double
-
-    override fun setVoltage(voltage: Voltage) {
-        io.setFlywheelSysIdMotorsVoltage(voltage)
-    }
-    /**
-     * END OF SYS ID VARIABLES / METHODS
-     */
 
     /**
      * START OF CONNECTION ALERT VARIABLES. These alerts are published separately from other inputs.
@@ -74,20 +53,20 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SysIdSubsystem(FlywheelCon
         followerMotorConnectionAlert.set(inputs.isFollowerMotorConnected)
 
         // Check if PIDF coefficients were changed live and update the motors.
-        if (SubsystemsTunableGains.flywheel_motors_kP.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.flywheel_motors_kI.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.flywheel_motors_kD.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.flywheel_motors_kF.hasChanged(hashCode())) {
+        if (SubsystemsTunableGains.FLYWHEEL_MOTORS_KP.hasChanged(hashCode()) ||
+            SubsystemsTunableGains.FLYWHEEL_MOTORS_KI.hasChanged(hashCode()) ||
+            SubsystemsTunableGains.FLYWHEEL_MOTORS_KD.hasChanged(hashCode()) ||
+            SubsystemsTunableGains.FLYWHEEL_MOTORS_KF.hasChanged(hashCode())) {
             io.updateFlywheelMotorsPIDF(
-                SubsystemsTunableGains.flywheel_motors_kP.get(),
-                SubsystemsTunableGains.flywheel_motors_kI.get(),
-                SubsystemsTunableGains.flywheel_motors_kD.get(),
-                SubsystemsTunableGains.flywheel_motors_kF.get())
+                SubsystemsTunableGains.FLYWHEEL_MOTORS_KP.get(),
+                SubsystemsTunableGains.FLYWHEEL_MOTORS_KI.get(),
+                SubsystemsTunableGains.FLYWHEEL_MOTORS_KD.get(),
+                SubsystemsTunableGains.FLYWHEEL_MOTORS_KF.get())
         }
         // Check if the manual target RPMs were changed live and update the target.
-        if (SubsystemsTunableGains.flywheel_motors_manualTargetRPMs.hasChanged(hashCode())) {
+        if (SubsystemsTunableGains.FLYWHEEL_MANUAL_RPM.hasChanged(hashCode())) {
             io.updateFlywheelManualVelocity(
-                SubsystemsTunableGains.flywheel_motors_manualTargetRPMs.get().rotationsPerMinute)
+                SubsystemsTunableGains.FLYWHEEL_MANUAL_RPM.get().rotationsPerMinute)
         }
     }
 

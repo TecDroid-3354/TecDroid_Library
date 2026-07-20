@@ -76,12 +76,12 @@ object FlywheelConstants {
                 KrakenMotors.configureCurrentLimits(supplyCurrentLimit, statorCurrentLimit)
             ),
             Optional.of<Slot0Configs>(
-                KrakenMotors.configureSlot0(SubsystemsControlGains.flywheel_motor_gains)
+                KrakenMotors.configureSlot0(SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS)
             ),
             Optional.empty<Slot1Configs>(),
             Optional.of<MotionMagicConfigs>(
                 KrakenMotors.configureAngularMotionMagic(
-                    SubsystemsMotionTargets.flywheel_angular_motion_targets,
+                    SubsystemsMotionTargets.FLYWHEEL_MOTION_TARGETS,
                     Mechanical.REDUCTION))
         )
 

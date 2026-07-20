@@ -1,19 +1,19 @@
 package frc.tecdroid3354.subsystems.elevator
 
-import com.ctre.phoenix6.controls.VoltageOut
 import edu.wpi.first.units.Units.Meters
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.MutDistance
 import edu.wpi.first.units.measure.Voltage
+import frc.tecdroid3354.constants.SubsystemsControlRequests
+import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import frc.tecdroid3354.subsystems.elevator.ElevatorConstants.Identification
 import frc.tecdroid3354.subsystems.elevator.ElevatorConstants.Mechanical
-import frc.tecdroid3354.utils.volts
 
 /**
- * [ElevatorIO] implementation intended to act as the I/O layer between the [Elevator] and two
+ * [ElevatorIO] implementation intended to act as the I/O layer between the [ElevatorSubsystem] and two
  * [com.ctre.phoenix6.hardware.TalonFX] motor controllers.
  * No logic should be performed here, all methods will interact with the hardware exclusively with the information
  * passed as parameters.
@@ -25,7 +25,6 @@ class ElevatorIOTalonFX : ElevatorIO {
     // Make sure to configure it and set it as follower.
     private val followerMotorController : OpTalonFX = OpTalonFX(Identification.followerMotorId,
                                                             Identification.elevatorCanBusName)
-    private val voltageRequest : VoltageOut = VoltageOut(0.0.volts)
     private var elevatorTargetDisplacement : MutDistance = Meters.mutable(0.0)
 
     /**
@@ -66,8 +65,8 @@ class ElevatorIOTalonFX : ElevatorIO {
      * The voltage value must be clamped within `[-12.0, 12.0]` before giving it to the implementations.
      * @param voltage The desired voltage.
      */
-    override fun setElevatorMotorsVoltage(voltage: Voltage) {
-        leadMotorController.voltageRequest(voltage)
+    override fun setElevatorSysIdMotorsVoltage(voltage: Voltage) {
+        leadMotorController.sysIdVoltageRequest(voltage)
     }
 
     /**
@@ -78,13 +77,14 @@ class ElevatorIOTalonFX : ElevatorIO {
      */
     override fun setElevatorTargetDisplacement(elevatorTargetDisplacement: Distance) {
         this.elevatorTargetDisplacement.mut_replace(elevatorTargetDisplacement)
-        // MotionMagicVoltage request being used. MotionMagic has to be configured for this to work.
-        leadMotorController.linearSubsystemPositionVoltageRequest(
+
+        leadMotorController.linearSubsystemPositionRequest(
+            SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
             elevatorTargetDisplacement,
-            ElevatorConstants.Control.limits,
-            Mechanical.reduction,
+            SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
             Mechanical.sprocket,
-            0)
+            Mechanical.reduction
+        )
     }
 
     /**

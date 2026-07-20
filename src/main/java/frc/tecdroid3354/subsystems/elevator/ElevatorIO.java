@@ -65,7 +65,7 @@ public interface ElevatorIO {
      * The voltage value must be clamped within {@code [-12.0, 12.0]} before giving it to the implementations.
      * @param voltage The desired voltage.
      */
-    void setElevatorMotorsVoltage(Voltage voltage);
+    void setElevatorSysIdMotorsVoltage(Voltage voltage);
 
     /**
      * Changes the target displacement of the elevator.
@@ -76,9 +76,9 @@ public interface ElevatorIO {
     /**
      * Sets the motors' voltage to 0.
      * Might change depending on the implementation, yet the default body of the function calls
-     * {@link #setElevatorMotorsVoltage(Voltage) setElevatorMotorsVoltage(Volts.of(0.0))}
+     * {@link #setElevatorSysIdMotorsVoltage(Voltage) setElevatorMotorsVoltage(Volts.of(0.0))}
      */
-    default void stopElevator() { setElevatorMotorsVoltage(Volts.of(0.0)); }
+    default void stopElevator() { setElevatorSysIdMotorsVoltage(Volts.of(0.0)); }
 
     /**
      * Uses the lead motor position as reference.

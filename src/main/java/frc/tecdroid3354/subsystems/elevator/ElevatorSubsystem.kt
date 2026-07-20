@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import frc.robot.utils.subsystemUtils.generic.SysIdSubsystem
+import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.utils.volts
 import org.littletonrobotics.junction.Logger
 
@@ -18,7 +19,7 @@ import org.littletonrobotics.junction.Logger
  * All logic regarding the elevator behaviour should be performed here, as the I/O must receive exclusively orders to
  * pass to either the hardware or simulation, depending on the implementation.
  */
-class Elevator(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.LogTable.subsystemFolder) {
+class ElevatorSubsystem(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.LogTable.subsystemFolder) {
     /**
      * I/O (Input/Output) variables ([io] passed in constructor). Enables to use different implementations of
      * [ElevatorIO] without modifying this class.
@@ -33,10 +34,10 @@ class Elevator(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.Lo
      *  - [sysIdRoutines] contains all quasistatic and
      */
     override val sysIdForwardRunningCondition: () -> Boolean
-        get() = { inputs.elevatorDisplacement.lt(ElevatorConstants.Control.limits.maximum) }
+        get() = { inputs.elevatorDisplacement.lt(SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS.maximum) }
 
     override val sysIdBackwardRunningCondition: () -> Boolean
-        get() = { inputs.elevatorDisplacement.gt(ElevatorConstants.Control.limits.minimum) }
+        get() = { inputs.elevatorDisplacement.gt(SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS.minimum) }
 
     override val power: Double
         get() = io.elevatorMotorPower
@@ -80,21 +81,21 @@ class Elevator(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.Lo
      * @param voltage The desired voltage.
      */
     override fun setVoltage(voltage: Voltage) {
-        io.setElevatorMotorsVoltage(MathUtil.clamp(voltage.`in`(Volts), -12.0, 12.0).volts);
+        io.setElevatorSysIdMotorsVoltage(MathUtil.clamp(voltage.`in`(Volts), -12.0, 12.0).volts);
     }
 
     /**
      * Clamps the desired [targetDisplacement] within the limits defined in [ElevatorConstants] and
      * passes the result to the [io] layer to command the motors.
-     * @param targetDisplacement The desired target displacement of the [Elevator] (NOT the motors).
+     * @param targetDisplacement The desired target displacement of the [ElevatorSubsystem] (NOT the motors).
      */
     fun setElevatorTargetDisplacement(targetDisplacement: Distance) {
-        io.setElevatorTargetDisplacement(ElevatorConstants.Control.limits.coerceIn(targetDisplacement) as Distance);
+        io.setElevatorTargetDisplacement(targetDisplacement);
     }
 
     /**
      * Fabricates an [InstantCommand] switching the Neutral / Idle mode of the motors to coast through the I/O layer.
-     * @return an [InstantCommand] that coasts the [Elevator] motors.
+     * @return an [InstantCommand] that coasts the [ElevatorSubsystem] motors.
      */
     fun coast(): Command {
         return InstantCommand({ io.coastElevatorMotors() } ).ignoringDisable(true);
@@ -102,7 +103,7 @@ class Elevator(private val io: ElevatorIO) : SysIdSubsystem(ElevatorConstants.Lo
 
     /**
      * Fabricates an [InstantCommand] switching the Neutral / Idle mode of the motors to brake through the I/O layer.
-     * @return an [InstantCommand] that brakes the [Elevator] motors.
+     * @return an [InstantCommand] that brakes the [ElevatorSubsystem] motors.
      */
     fun brake(): Command {
         return InstantCommand({ io.brakeElevatorMotors() } ).ignoringDisable(true);

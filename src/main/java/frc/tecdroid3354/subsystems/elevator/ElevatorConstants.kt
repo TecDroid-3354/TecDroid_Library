@@ -43,12 +43,7 @@ object ElevatorConstants {
      * All constants that dictate the behavior of the elevator
      * All values are placeholders and must be tuned for your specific robot.
      */
-    object Control {
-        private val minimumDisplacement: Distance = 0.5.inches          // Minimum allowed displacement of the elevator
-        private val maximumDisplacement: Distance = 52.0.inches         // Maximum allowed displacement of the elevator
-
-        val limits: MeasureLimits<DistanceUnit> = MeasureLimits(minimumDisplacement, maximumDisplacement)
-                                                                // To enforce physical limits
+    object Control {                                                                // To enforce physical limits
         val gains: ControlGains = ControlGains()                // Loop control (PIDF) and Feedforward (SVAG) values
         val motionTargets: LinearMotionTargets = LinearMotionTargets(0.0.metersPerSecond, 0.0.seconds, 0.0.seconds)
                                                                 // Cruise Velocity, Acceleration & Jerk
