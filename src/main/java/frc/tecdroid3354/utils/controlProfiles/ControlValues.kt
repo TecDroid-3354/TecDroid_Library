@@ -10,7 +10,6 @@ data class ControlGains(
     val p: Double = 0.0,
     val i: Double = 0.0,
     val d: Double = 0.0,
-    val f: Double = 0.0,
     val s: Double = 0.0,
     val v: Double = 0.0,
     val a: Double = 0.0,
@@ -19,6 +18,11 @@ data class ControlGains(
 
 data class MotionTargets(val cruiseVelocity: Double = 0.0, val acceleration: Double = 0.0, val jerk: Double = 0.0)
 
+/**
+ * Intended to pass as a parameter to [frc.tecdroid3354.utils.devices.KrakenMotors.configureAngularMotionMagic],
+ * which applies the subsystem reduction before configuring the motors; hence, the values for this class
+ * must be in mechanism units.
+ */
 data class AngularMotionTargets(
     val cruiseVelocity: AngularVelocity = RadiansPerSecond.of(0.0),
     val accelerationTimePeriod: Time,
@@ -26,7 +30,11 @@ data class AngularMotionTargets(
     val acceleration: AngularAcceleration = cruiseVelocity.div(accelerationTimePeriod),
     val jerk: Velocity<AngularAccelerationUnit> = acceleration.div(jerkTimePeriod)
 )
-
+/**
+ * Intended to pass as a parameter to [frc.tecdroid3354.utils.devices.KrakenMotors.configureAngularMotionMagic],
+ * which applies the subsystem reduction before configuring the motors; hence, the values for this class
+ * must be in mechanism units.
+ */
 data class LinearMotionTargets(
     val cruiseVelocity: LinearVelocity = MetersPerSecond.of(0.0),
     val accelerationTimePeriod: Time,
@@ -38,4 +46,9 @@ data class LinearMotionTargets(
     fun angularVelocity(circle: Circle) = circle.linearVelocityToAngularVelocity(cruiseVelocity)
     fun angularAcceleration(circle: Circle) = angularVelocity(circle).div(accelerationTimePeriod)
     fun angularJerk(circle: Circle) = angularAcceleration(circle).div(jerkTimePeriod)
+    fun angularMotionTargets(circle: Circle) = AngularMotionTargets( // Still needs to be processed through KrakenMotors
+        angularVelocity(circle),
+        accelerationTimePeriod,
+        jerkTimePeriod
+    )
 }

@@ -1,13 +1,13 @@
-package frc.tecdroid3354.subsystems.angularVelocityTemplate
+package frc.tecdroid3354.subsystems.angularVelocity
 
-import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
-import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.robot.utils.subsystemUtils.generic.SysIdSubsystem
-import frc.tecdroid3354.constants.SubsystemsTunableGains
+import frc.tecdroid3354.constants.SubsystemsControlGains
+import frc.tecdroid3354.constants.SubsystemsTunableTargets
+import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
 import frc.tecdroid3354.utils.meters
 import frc.tecdroid3354.utils.rotationsPerMinute
 import org.littletonrobotics.junction.Logger
@@ -52,21 +52,18 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelCons
         leadMotorConnectionAlert.set(inputs.isLeadMotorConnected)
         followerMotorConnectionAlert.set(inputs.isFollowerMotorConnected)
 
-        // Check if PIDF coefficients were changed live and update the motors.
-        if (SubsystemsTunableGains.FLYWHEEL_MOTORS_KP.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.FLYWHEEL_MOTORS_KI.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.FLYWHEEL_MOTORS_KD.hasChanged(hashCode()) ||
-            SubsystemsTunableGains.FLYWHEEL_MOTORS_KF.hasChanged(hashCode())) {
-            io.updateFlywheelMotorsPIDF(
-                SubsystemsTunableGains.FLYWHEEL_MOTORS_KP.get(),
-                SubsystemsTunableGains.FLYWHEEL_MOTORS_KI.get(),
-                SubsystemsTunableGains.FLYWHEEL_MOTORS_KD.get(),
-                SubsystemsTunableGains.FLYWHEEL_MOTORS_KF.get())
+        // Check if ControlGains coefficients were changed live and update the motors.
+        if (SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.hadTunableUpdated()) {
+            io.updateFlywheelMotorsControlGains(0) // Updates Slot0 because is the primary set
         }
+        if (SubsystemsControlGains.FLYWHEEL_MOTOR_SECONDARY_GAINS.hadTunableUpdated()) {
+            io.updateFlywheelMotorsControlGains(1) // Updates Slot1 because is the secondary set
+        }
+
         // Check if the manual target RPMs were changed live and update the target.
-        if (SubsystemsTunableGains.FLYWHEEL_MANUAL_RPM.hasChanged(hashCode())) {
+        if (SubsystemsTunableTargets.FLYWHEEL_MANUAL_RPM.hasChanged(hashCode())) {
             io.updateFlywheelManualVelocity(
-                SubsystemsTunableGains.FLYWHEEL_MANUAL_RPM.get().rotationsPerMinute)
+                SubsystemsTunableTargets.FLYWHEEL_MANUAL_RPM.get().rotationsPerMinute)
         }
     }
 
@@ -118,15 +115,15 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelCons
     /**
      * Changes NeutralMode / IdleMode of the motors to Coast.
      */
-    fun coastFlywheelMotors(): Runnable {
-        return io.coastFlywheelMotors()
+    fun coastFlywheelMotors(): Command {
+        return io.coastFlywheelMotors().InstantCommandIgnoreDisabled(this)
     }
 
     /**
      * Changes NeutralMode / IdleMode of the motors to Brake.
      */
-    fun brakeFlywheelMotors(): Runnable {
-        return io.brakeFlywheelMotors()
+    fun brakeFlywheelMotors(): Command {
+        return io.brakeFlywheelMotors().InstantCommandIgnoreDisabled(this)
     }
 
     /**
@@ -150,9 +147,9 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelCons
     private fun getCalculatedFlywheelScoringVelocity(flywheelDistanceToTarget: Distance): AngularVelocity {
         val distanceInMeters = flywheelDistanceToTarget.meters
         val calculatedRPMs =
-            FlywheelConstants.PolynomialCoefficients.SCORING_X3_COEFF * distanceInMeters.pow(3.0) +
-                    FlywheelConstants.PolynomialCoefficients.SCORING_X2_COEFF * distanceInMeters.pow(2.0) +
-                    FlywheelConstants.PolynomialCoefficients.SCORING_X1_COEFF * distanceInMeters +
+            FlywheelConstants.PolynomialCoefficients.SCORING_X3_COEFF.times(distanceInMeters.pow(3.0)) +
+                    FlywheelConstants.PolynomialCoefficients.SCORING_X2_COEFF.times(distanceInMeters.pow(2.0)) +
+                    FlywheelConstants.PolynomialCoefficients.SCORING_X1_COEFF.times(distanceInMeters) +
                     FlywheelConstants.PolynomialCoefficients.SCORING_X0_COEFF
 
         return calculatedRPMs.rotationsPerMinute
@@ -179,9 +176,9 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelCons
     private fun getCalculatedFlywheelAssistVelocity(flywheelDistanceToTarget: Distance): AngularVelocity {
         val distanceInMeters = flywheelDistanceToTarget.meters
         val calculatedRPMs =
-            FlywheelConstants.PolynomialCoefficients.ASSIST_X3_COEFF * distanceInMeters.pow(3.0) +
-                    FlywheelConstants.PolynomialCoefficients.ASSIST_X2_COEFF * distanceInMeters.pow(2.0) +
-                    FlywheelConstants.PolynomialCoefficients.ASSIST_X1_COEFF * distanceInMeters +
+            FlywheelConstants.PolynomialCoefficients.ASSIST_X3_COEFF.times(distanceInMeters.pow(3.0)) +
+                    FlywheelConstants.PolynomialCoefficients.ASSIST_X2_COEFF.times(distanceInMeters.pow(2.0)) +
+                    FlywheelConstants.PolynomialCoefficients.ASSIST_X1_COEFF.times(distanceInMeters) +
                     FlywheelConstants.PolynomialCoefficients.ASSIST_X0_COEFF
 
         return calculatedRPMs.rotationsPerMinute

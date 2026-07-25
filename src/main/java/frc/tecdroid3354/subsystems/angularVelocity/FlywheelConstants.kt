@@ -1,23 +1,28 @@
-package frc.tecdroid3354.subsystems.angularVelocityTemplate
+package frc.tecdroid3354.subsystems.angularVelocity
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs
 import com.ctre.phoenix6.configs.MotionMagicConfigs
 import com.ctre.phoenix6.configs.MotorOutputConfigs
 import com.ctre.phoenix6.configs.Slot0Configs
 import com.ctre.phoenix6.configs.Slot1Configs
+import com.ctre.phoenix6.configs.Slot2Configs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import edu.wpi.first.units.measure.Current
+import edu.wpi.first.units.measure.MomentOfInertia
 import frc.tecdroid3354.constants.CanBuses
 import frc.tecdroid3354.constants.RobotTelemetry
+import frc.tecdroid3354.constants.SimConstants
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
 import frc.tecdroid3354.utils.amps
 import frc.tecdroid3354.utils.devices.KrakenMotors
+import frc.tecdroid3354.utils.kilogramSquareMeters
 import frc.tecdroid3354.utils.mechanical.Reduction
 import java.util.Optional
+import kotlin.math.pow
 
 object FlywheelConstants {
     /**
@@ -34,6 +39,22 @@ object FlywheelConstants {
      */
     object Mechanical {
         val REDUCTION: Reduction = Reduction(1.0)
+
+        private const val NUMBER_OF_MOTORS: Double = 2.toDouble() // Because MOI.times() requires a double
+
+        // From OnShape, accounting for the main roller and flywheel of Tutankabot as of 24/07/2026
+        private val MECHANISM_INERTIA: MomentOfInertia = (15.0.times(SimConstants.LB_SQUARED_IN_TO_KG_SQUARED_M)).kilogramSquareMeters
+
+        // From mechanism perspective
+        // Check: https://www.motioncontroltips.com/how-do-gearmotors-impact-reflected-mass-inertia-from-the-load/
+        // which refers to the same formula but from motor perspective (reflected load inertia)
+        val MOMENT_OF_INERTIA: MomentOfInertia =
+            MECHANISM_INERTIA
+                .plus(
+                    SimConstants.ESTIMATED_MOTOR_MOI
+                    .times(NUMBER_OF_MOTORS)
+                    .times(REDUCTION.getRatio().pow(2))
+                )
     }
 
     /**
@@ -53,20 +74,20 @@ object FlywheelConstants {
     }
 
     /**
-     * Contains initial configuration for the Flywheel motors.
+     * Contains initial configuration for the Flywheel motors assuming Phoenix API.
      * Configurations meant to be tunable live, limits, control gains, motion targets and movement presets
      * are all stored in a separate file where they are next to those of all other subsystems (excluding drivetrain).
      * This structure is to have a single file that is regularly consulted by the Software Team, whereas this one
      * remains mostly untouched unless the Design or Electrical Teams change something.
      */
-    object MotorConfiguration {
+    object PhoenixMotorConfiguration {
         val followerMotorAlignment: MotorAlignmentValue = MotorAlignmentValue.Aligned
 
         private val neutralMode: NeutralModeValue = NeutralModeValue.Coast
         private val motorDirection: InvertedValue = InvertedValue.CounterClockwise_Positive
 
         private val supplyCurrentLimit: Current = 30.0.amps
-        private val statorCurrentLimit: Current = 60.0.amps
+        private val statorCurrentLimit: Current = 80.0.amps
 
         val initialMotorsConfiguration: TalonFXConfiguration = KrakenMotors.createTalonFXConfiguration(
             Optional.of<MotorOutputConfigs>(
@@ -75,16 +96,14 @@ object FlywheelConstants {
             Optional.of<CurrentLimitsConfigs>(
                 KrakenMotors.configureCurrentLimits(supplyCurrentLimit, statorCurrentLimit)
             ),
-            Optional.of<Slot0Configs>(
-                KrakenMotors.configureSlot0(SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS)
-            ),
-            Optional.empty<Slot1Configs>(),
+            Optional.of<Slot0Configs>(SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.updatePhoenixSlot0Configs()),
+            Optional.of<Slot1Configs>(SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.updatePhoenixSlot1Configs()),
+            Optional.of<Slot2Configs>(SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.updatePhoenixSlot2Configs()),
             Optional.of<MotionMagicConfigs>(
                 KrakenMotors.configureAngularMotionMagic(
                     SubsystemsMotionTargets.FLYWHEEL_MOTION_TARGETS,
                     Mechanical.REDUCTION))
         )
-
     }
 
     /**
@@ -95,9 +114,13 @@ object FlywheelConstants {
      */
     object Telemetry {
         const val SUBSYSTEM_TAB: String = "Flywheel"
-        const val LEAD_MOTOR_CONNECTION_ALERT_TAB: String =
-            "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${SUBSYSTEM_TAB}/Lead Motor id=${Identification.LEAD_MOTOR_ID}"
-        const val FOLLOWER_MOTOR_CONNECTION_ALERT_TAB: String =
-            "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${SUBSYSTEM_TAB}/Follower Motor id=${Identification.FOLLOWER_MOTOR_ID}"
+        const val SUBSYSTEM_PRIMARY_GAINS               : String = "$SUBSYSTEM_TAB Primary Gains"
+        const val SUBSYSTEM_SECONDARY_GAINS             : String = "$SUBSYSTEM_TAB Secondary Gains"
+        const val LEAD_MOTOR_CONNECTION_ALERT_TAB       : String =
+            "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${Identification.FLYWHEEL_CANBUS_NAME}" +
+                    "/${SUBSYSTEM_TAB} Motor id=${Identification.LEAD_MOTOR_ID}"
+        const val FOLLOWER_MOTOR_CONNECTION_ALERT_TAB   : String =
+            "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${Identification.FLYWHEEL_CANBUS_NAME}" +
+                    "/${SUBSYSTEM_TAB} Motor id=${Identification.FOLLOWER_MOTOR_ID}"
     }
 }

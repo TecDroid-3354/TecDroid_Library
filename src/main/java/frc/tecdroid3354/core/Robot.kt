@@ -11,6 +11,7 @@ import frc.tecdroid3354.constants.RobotConstants
 import frc.tecdroid3354.constants.RobotMode.REAL
 import frc.tecdroid3354.constants.RobotMode.SIM
 import frc.tecdroid3354.constants.RobotMode.REPLAY
+import frc.tecdroid3354.constants.RobotTelemetry
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -41,7 +42,7 @@ object Robot : LoggedRobot() {
         }
 
         // Set up data receivers & replay source
-        when (RobotConstants.robotMode) {
+        when (RobotConstants.ROBOT_MODE) {
             REAL -> {
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(WPILOGWriter())
@@ -71,6 +72,9 @@ object Robot : LoggedRobot() {
 
         // Start Elastic
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath())
+
+        // Just to check if the robot mode is correctly set
+        Logger.recordOutput(RobotTelemetry.ROBOT_MODE_TAB, RobotConstants.ROBOT_MODE.toString())
     }
 
     /** This function is called periodically during all modes.  */

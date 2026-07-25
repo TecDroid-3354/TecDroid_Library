@@ -5,6 +5,7 @@ package frc.tecdroid3354.utils
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.units.AngularAccelerationUnit
 import edu.wpi.first.units.LinearAccelerationUnit
+import edu.wpi.first.units.Units
 import edu.wpi.first.units.Units.Amps
 import edu.wpi.first.units.Units.Celsius
 import edu.wpi.first.units.Units.Degrees
@@ -12,13 +13,17 @@ import edu.wpi.first.units.Units.DegreesPerSecond
 import edu.wpi.first.units.Units.DegreesPerSecondPerSecond
 import edu.wpi.first.units.Units.Hertz
 import edu.wpi.first.units.Units.Inches
+import edu.wpi.first.units.Units.KilogramSquareMeters
+import edu.wpi.first.units.Units.Kilograms
 import edu.wpi.first.units.Units.Meters
 import edu.wpi.first.units.Units.MetersPerSecond
 import edu.wpi.first.units.Units.MetersPerSecondPerSecond
 import edu.wpi.first.units.Units.Milliseconds
+import edu.wpi.first.units.Units.Pounds
 import edu.wpi.first.units.Units.Radians
 import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.Units.RotationsPerSecond
+import edu.wpi.first.units.Units.RotationsPerSecondPerSecond
 import edu.wpi.first.units.Units.Second
 import edu.wpi.first.units.Units.Seconds
 import edu.wpi.first.units.Units.Volts
@@ -64,6 +69,11 @@ val Double.milliseconds                 : Time                  ; get() = Millis
 val Double.volts                        : Voltage               ; get() = Volts.of(this)
 val Double.amps                         : Current               ; get() = Amps.of(this)
 val Double.degreesCelsius               : Temperature           ; get() = Celsius.of(this)
+val Double.kilograms                    : Mass                  ; get() = Kilograms.of(this)
+val Double.pounds                       : Mass                  ; get() = Pounds.of(this)
+
+// MOI (Moment of Inertia)
+val Double.kilogramSquareMeters         : MomentOfInertia       ; get() = KilogramSquareMeters.of(this)
 
 // Velocity
 val Double.metersPerSecond              : LinearVelocity        ; get() = MetersPerSecond.of(this)
@@ -72,12 +82,14 @@ val Double.rotationsPerSecond           : AngularVelocity       ; get() = Rotati
 val Double.rotationsPerMinute           : AngularVelocity       ; get() = RotationsPerSecond.of(this.div(60.0))
 
 // Acceleration
-val Double.metersPerSecondPerSecond     : LinearAcceleration    ; get() = MetersPerSecondPerSecond.of(this)
-val Double.degreesPerSecondPerSecond    : AngularAcceleration   ; get() = DegreesPerSecondPerSecond.of(this)
+val Double.metersPerSecondSquared       : LinearAcceleration    ; get() = MetersPerSecondPerSecond.of(this)
+val Double.degreesPerSecondSquared      : AngularAcceleration   ; get() = DegreesPerSecondPerSecond.of(this)
+val Double.rotationsPerSecondSquared    : AngularAcceleration   ; get() = RotationsPerSecondPerSecond.of(this)
 
 // Jerk
-val Double.metersPerSecondPerSecondPerSecond : Velocity<LinearAccelerationUnit>     ; get() = MetersPerSecondPerSecond.per(Second).of(this)
-val Double.degreesPerSecondPerSecondPerSecond: Velocity<AngularAccelerationUnit>    ; get() = DegreesPerSecondPerSecond.per(Second).of(this)
+val Double.metersPerSecondCubed     : Velocity<LinearAccelerationUnit>      ; get() = MetersPerSecondPerSecond.per(Second).of(this)
+val Double.degreesPerSecondCubed    : Velocity<AngularAccelerationUnit>     ; get() = DegreesPerSecondPerSecond.per(Second).of(this)
+val Double.rotationsPerSecondCubed  : Velocity<AngularAccelerationUnit>     ; get() = RotationsPerSecondPerSecond.per(Second).of(this)
 
 //
 // Inverse Extension Members
@@ -94,6 +106,11 @@ val Time.milliseconds                   : Double                ; get() = this.`
 val Voltage.volts                       : Double                ; get() = this.`in`(Volts)
 val Current.amps                        : Double                ; get() = this.`in`(Amps)
 val Temperature.degreesCelsius          : Double                ; get() = this.`in`(Celsius)
+val Mass.kilograms                      : Double                ; get() = this.`in`(Kilograms)
+val Mass.pounds                         : Double                ; get() = this.`in`(Pounds)
+
+// MOI (Moment of Inertia)
+val MomentOfInertia.kilogramSquareMeters: Double                ; get() = this.`in`(KilogramSquareMeters)
 
 // Velocity
 val LinearVelocity.metersPerSecond      : Double                ; get() = this.`in`(MetersPerSecond)
@@ -102,9 +119,11 @@ val AngularVelocity.rotationsPerSecond  : Double                ; get() = this.`
 val AngularVelocity.rotationsPerMinute  : Double                ; get() = this.`in`(RotationsPerSecond).times(60.0)
 
 // Acceleration
-val LinearAcceleration.metersPerSecondPerSecond     : Double    ; get() = this.`in`(MetersPerSecondPerSecond)
-val AngularAcceleration.degreesPerSecondPerSecond   : Double    ; get() = this.`in`(DegreesPerSecondPerSecond)
+val LinearAcceleration.metersPerSecondSquared     : Double      ; get() = this.`in`(MetersPerSecondPerSecond)
+val AngularAcceleration.degreesPerSecondSquared   : Double      ; get() = this.`in`(DegreesPerSecondPerSecond)
+val AngularAcceleration.rotationsPerSecondSquared : Double      ; get() = this.`in`(RotationsPerSecondPerSecond)
 
 // Jerk
-val Velocity<LinearAccelerationUnit>.metersPerSecondPerSecondPerSecond  : Double    ; get() = this.`in`(MetersPerSecondPerSecond.per(Second))
-val Velocity<AngularAccelerationUnit>.degreesPerSecondPerSecondPerSecond: Double    ; get() = this.`in`(DegreesPerSecondPerSecond.per(Second))
+val Velocity<LinearAccelerationUnit>.metersPerSecondCubed       : Double    ; get() = this.`in`(MetersPerSecondPerSecond.per(Second))
+val Velocity<AngularAccelerationUnit>.degreesPerSecondCubed     : Double    ; get() = this.`in`(DegreesPerSecondPerSecond.per(Second))
+val Velocity<AngularAccelerationUnit>.rotationsPerSecondCubed   : Double    ; get() = this.`in`(RotationsPerSecondPerSecond.per(Second))

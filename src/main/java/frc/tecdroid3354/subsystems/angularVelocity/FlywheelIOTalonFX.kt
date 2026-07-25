@@ -1,4 +1,4 @@
-package frc.tecdroid3354.subsystems.angularVelocityTemplate
+package frc.tecdroid3354.subsystems.angularVelocity
 
 import edu.wpi.first.math.MathUtil
 import edu.wpi.first.units.Units.DegreesPerSecond
@@ -9,8 +9,6 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
-import frc.tecdroid3354.utils.controlProfiles.ControlGains
-import frc.tecdroid3354.utils.devices.KrakenMotors
 import frc.tecdroid3354.utils.devices.OpTalonFX
 
 /**
@@ -40,54 +38,47 @@ class FlywheelIOTalonFX: FlywheelIO {
         inputs.flywheelActualVelocity.mut_replace(leadMotorController.getMotorToAngularSubsystemVelocity(
             FlywheelConstants.Mechanical.REDUCTION
         ))
-        inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM)
         inputs.flywheelTargetVelocity.mut_replace(flywheelVelocityTarget)
+        inputs.flywheelManualTargetVelocity.mut_replace(manualFlywheelVelocityTarget)
+        inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM)
 
         inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
-        inputs.leadMotorPosition.mut_replace(leadMotorController.getPosition())
         inputs.leadMotorVelocity.mut_replace(leadMotorController.getVelocity())
+        inputs.leadMotorAcceleration.mut_replace(leadMotorController.getAcceleration())
+        inputs.followerMotorAcceleration.mut_replace(followerMotorController.getAcceleration())
         inputs.leadMotorTemperature.mut_replace(leadMotorController.getTemperature())
         inputs.leadMotorOutputVoltage.mut_replace(leadMotorController.getOutputVoltage())
         inputs.leadMotorSupplyCurrent.mut_replace(leadMotorController.getSupplyCurrent())
         inputs.leadMotorTorqueCurrent.mut_replace(leadMotorController.getTorqueCurrent())
-        inputs.leadMotorPower = leadMotorController.getPower()
 
         inputs.isFollowerMotorConnected = followerMotorController.getIsConnected()
-        inputs.followerMotorPosition.mut_replace(followerMotorController.getPosition())
         inputs.followerMotorVelocity.mut_replace(followerMotorController.getVelocity())
         inputs.followerMotorTemperature.mut_replace(followerMotorController.getTemperature())
         inputs.followerMotorOutputVoltage.mut_replace(followerMotorController.getOutputVoltage())
         inputs.followerMotorSupplyCurrent.mut_replace(followerMotorController.getSupplyCurrent())
         inputs.followerMotorTorqueCurrent.mut_replace(followerMotorController.getTorqueCurrent())
-        inputs.followerMotorPower = followerMotorController.getPower()
     }
 
     override fun updateFlywheelManualVelocity(newFlywheelManualVelocity: AngularVelocity) {
         manualFlywheelVelocityTarget.mut_replace(newFlywheelManualVelocity)
     }
 
-    override fun updateFlywheelMotorsPIDF(kP: Double, kI: Double, kD: Double, kF: Double, slot: Int) {
-        // Make sure the selected slot is either 0 or 1
-        val validatedSlot = MathUtil.clamp(slot, 0, 1)
+    override fun updateFlywheelMotorsControlGains(slot: Int) {
+        // Make sure the selected slot is either 0, 1, or 2
+        val validatedSlot = MathUtil.clamp(slot, 0, 2)
         // Clone the initial config
-        val newMotorsConfig = FlywheelConstants.MotorConfiguration.initialMotorsConfiguration.clone()
+        val newMotorsConfig = FlywheelConstants.PhoenixMotorConfiguration.initialMotorsConfiguration.clone()
 
-        if (validatedSlot == 0) { // Update the corresponding Slot Configs
-            newMotorsConfig.Slot0 = KrakenMotors.configureSlot0(
-                ControlGains(kP, kI, kD, kF,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.s,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.v,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.a,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.g),
-            )
-        } else {
-            newMotorsConfig.Slot1 = KrakenMotors.configureSlot1(
-                ControlGains(kP, kI, kD, kF,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.s,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.v,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.a,
-                    SubsystemsControlGains.FLYWHEEL_MOTOR_GAINS.g),
-            )
+        when (validatedSlot) { // Update the corresponding Slot Configs
+            0 -> {
+                newMotorsConfig.Slot0 = SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.updatePhoenixSlot0Configs()
+            }
+            1 -> {
+                newMotorsConfig.Slot1 = SubsystemsControlGains.FLYWHEEL_MOTOR_SECONDARY_GAINS.updatePhoenixSlot1Configs()
+            }
+            else -> { // Can assume else {} branch to be 2, but defaults to primary since tertiary are not declared.
+                newMotorsConfig.Slot2 = SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.updatePhoenixSlot2Configs()
+            }
         }
 
         leadMotorController.applyConfigAndClearFaults(newMotorsConfig)
@@ -138,12 +129,6 @@ class FlywheelIOTalonFX: FlywheelIO {
         }
     }
 
-    override fun setFlywheelSysIdMotorsVoltage(voltage: Voltage): Runnable {
-        return {
-            leadMotorController.sysIdVoltageRequest(voltage)
-        }
-    }
-
     override fun coastFlywheelMotors(): Runnable {
         return {
             leadMotorController.coast()
@@ -159,11 +144,11 @@ class FlywheelIOTalonFX: FlywheelIO {
     }
 
     override fun initialMotorConfiguration() {
-        leadMotorController.applyConfigAndClearFaults(FlywheelConstants.MotorConfiguration.initialMotorsConfiguration)
-        followerMotorController.applyConfigAndClearFaults(FlywheelConstants.MotorConfiguration.initialMotorsConfiguration)
+        leadMotorController.applyConfigAndClearFaults(FlywheelConstants.PhoenixMotorConfiguration.initialMotorsConfiguration)
+        followerMotorController.applyConfigAndClearFaults(FlywheelConstants.PhoenixMotorConfiguration.initialMotorsConfiguration)
 
         followerMotorController.follow(
             leadMotorController.getMotorInstance(),
-            FlywheelConstants.MotorConfiguration.followerMotorAlignment)
+            FlywheelConstants.PhoenixMotorConfiguration.followerMotorAlignment)
     }
 }

@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
+import edu.wpi.first.wpilibj2.command.WrapperCommand
+import frc.tecdroid3354.utils.InstantCommand
 
 /**
  * Just creates an [InstantCommand] based of the [Runnable] and with the desired [Subsystem] requirements.
@@ -17,7 +19,15 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 fun Runnable.InstantCommand(vararg requirements: Subsystem): InstantCommand {
     return InstantCommand(this, *requirements)
 }
-
+/**
+ * Just creates an [InstantCommand] based of the [Runnable] with .ignoringDisable(true)
+ *   and with the desired [Subsystem] requirements.
+ * @param requirements The [Subsystem]s necessary to perform the [Runnable]
+ * @return an [InstantCommand] with the above specifications.
+ */
+fun Runnable.InstantCommandIgnoreDisabled(vararg requirements: Subsystem): WrapperCommand {
+    return InstantCommand(this, *requirements).ignoringDisable(true)
+}
 /**
  * Just creates a [RunCommand] based of the [Runnable] and with the desired [Subsystem] requirements.
  * @param requirements The [Subsystem]s necessary to perform the [Runnable]

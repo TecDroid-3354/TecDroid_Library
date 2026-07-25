@@ -1,4 +1,4 @@
-package frc.tecdroid3354.subsystems.angularVelocityTemplate;
+package frc.tecdroid3354.subsystems.angularVelocity;
 
 import edu.wpi.first.units.measure.*;
 import org.littletonrobotics.junction.AutoLog;
@@ -47,27 +47,26 @@ public interface FlywheelIO {
         /** Flywheel wise fields */
         public MutAngularVelocity flywheelActualVelocity = DegreesPerSecond.mutable(0.0);
         public MutAngularVelocity flywheelTargetVelocity = DegreesPerSecond.mutable(0.0);
+        public MutAngularVelocity flywheelManualTargetVelocity = DegreesPerSecond.mutable(0.0);
         public MutAngularVelocity flywheelPresetVelocity = DegreesPerSecond.mutable(0.0); // If applicable
 
         /** Lead motor wise fields */
         public boolean isLeadMotorConnected = false;
-        public MutAngle leadMotorPosition = Degrees.mutable(0.0);
         public MutAngularVelocity leadMotorVelocity = DegreesPerSecond.mutable(0.0);
+        public MutAngularAcceleration leadMotorAcceleration = DegreesPerSecondPerSecond.mutable(0.0);
         public MutTemperature leadMotorTemperature = Celsius.mutable(0.0);
         public MutVoltage leadMotorOutputVoltage = Volts.mutable(0.0);
         public MutCurrent leadMotorSupplyCurrent = Amps.mutable(0.0);  // Current supplied from battery
         public MutCurrent leadMotorTorqueCurrent = Amps.mutable(0.0);  // Reflects the physical load
-        public double leadMotorPower = 0.0;
 
         /** Follower motor wise fields (duplicate for number of followers, or delete if not applicable) */
         public boolean isFollowerMotorConnected = false;
-        public MutAngle followerMotorPosition = Degrees.mutable(0.0);
         public MutAngularVelocity followerMotorVelocity = DegreesPerSecond.mutable(0.0);
+        public MutAngularAcceleration followerMotorAcceleration = DegreesPerSecondPerSecond.mutable(0.0);
         public MutTemperature followerMotorTemperature = Celsius.mutable(0.0);
         public MutVoltage followerMotorOutputVoltage = Volts.mutable(0.0);
         public MutCurrent followerMotorSupplyCurrent = Amps.mutable(0.0);   // Current supplied from battery
         public MutCurrent followerMotorTorqueCurrent = Amps.mutable(0.0);   // Reflects the physical load
-        public double followerMotorPower = 0.0;
     }
 
     /**
@@ -85,27 +84,13 @@ public interface FlywheelIO {
     void updateFlywheelManualVelocity(AngularVelocity newFlywheelManualVelocity);
 
     /**
-     * Used to re-configure the motors with the new PIDF. These gains reset with every code reload.
+     * Used to re-configure the motors with the new PID, SVAG gains. These gains reset with every code reload.
      * All other settings are obtained through the pre-established motor configurations.
-     * @param kP Obtained live through Elastic.
-     * @param kI Obtained live through Elastic.
-     * @param kD Obtained live through Elastic.
-     * @param kF Obtained live through Elastic.
-     * @param slot Which PIDF gains to update [0, 1]
+     * The gains will be gathered from the respective {@link frc.tecdroid3354.utils.controlProfiles.TunableControlGains}
+     * inside {@link frc.tecdroid3354.constants.SubsystemsControlGains}, based on the desired slot.
+     * @param slot Which control gains slot to update [0, 1, 2]
      */
-    void updateFlywheelMotorsPIDF(double kP, double kI, double kD, double kF, int slot);
-
-    /**
-     * Same as {@link #updateFlywheelMotorsPIDF(double, double, double, double, int)}, but defaults the
-     * parameter 'slot' to 0. Note that the aforementioned method must be implemented.
-     * @param kP Obtained live through Elastic.
-     * @param kI Obtained live through Elastic.
-     * @param kD Obtained live through Elastic.
-     * @param kF Obtained live through Elastic.
-     */
-    default void updateFlywheelMotorsPIDF(double kP, double kI, double kD, double kF) {
-        updateFlywheelMotorsPIDF(kP, kI, kD, kF, 0);
-    }
+    void updateFlywheelMotorsControlGains(int slot);
 
     /**
      * Sets the flywheel to the manually set velocity through Elastic. This resets with every code reload.
@@ -141,13 +126,6 @@ public interface FlywheelIO {
     Runnable stopFlywheel();
 
     /**
-     * Used <b>ONLY</b> for SysId. Sets the voltage to the lead motor -and by consequence the follower motor.
-     * The voltage value must be clamped within {@code [-12.0, 12.0]} before giving it to the implementations.
-     * @param voltage The desired voltage.
-     */
-    Runnable setFlywheelSysIdMotorsVoltage(Voltage voltage);
-
-    /**
      * Merely changes the Neutral / Idle mode of the motors to coast for easier manipulation.
      * @return A {@link Runnable} coasting all flywheel motors
      */
@@ -160,7 +138,69 @@ public interface FlywheelIO {
     Runnable brakeFlywheelMotors();
 
     /**
-     * Applies the configuration inside {@link FlywheelConstants.MotorConfiguration}. Follower commands are included.
+     * Applies the configuration inside {@link FlywheelConstants.PhoenixMotorConfiguration}. Follower commands are included.
      */
     void initialMotorConfiguration();
+
+    /**
+     * **IMPORTANT:** This class is meant to use in REPLAY mode only. It leaves every method empty,
+     * since REPLAY mode only recreates what happened and does not need to process anything through those methods.
+     *
+     * <p>It is created to avoid doing this inside {@link frc.tecdroid3354.core.RobotContainer} and to avoid
+     * having to give every method a default, empty implementation since it would prevent notifications to override
+     * them in other layers.
+     * </p>
+     */
+    class DummyFlywheelIO implements FlywheelIO {
+
+        @Override
+        public void updateFlywheelInputs(FlywheelIOInputs inputs) {
+
+        }
+
+        @Override
+        public void updateFlywheelManualVelocity(AngularVelocity newFlywheelManualVelocity) {
+
+        }
+
+        @Override
+        public void updateFlywheelMotorsControlGains(int slot) {
+
+        }
+
+        @Override
+        public Runnable enableFlywheelManualVelocity() {
+            return null;
+        }
+
+        @Override
+        public Runnable enableFlywheelPresetVelocity() {
+            return null;
+        }
+
+        @Override
+        public Runnable enableFlywheelCalculatedVelocity(AngularVelocity flywheelCalculatedVelocity) {
+            return null;
+        }
+
+        @Override
+        public Runnable stopFlywheel() {
+            return null;
+        }
+
+        @Override
+        public Runnable coastFlywheelMotors() {
+            return null;
+        }
+
+        @Override
+        public Runnable brakeFlywheelMotors() {
+            return null;
+        }
+
+        @Override
+        public void initialMotorConfiguration() {
+
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package frc.tecdroid3354.utils.devices
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.DynamicMotionMagicExpoTorqueCurrentFOC
 import com.ctre.phoenix6.controls.DynamicMotionMagicTorqueCurrentFOC
@@ -25,13 +26,16 @@ import edu.wpi.first.units.measure.Current
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Temperature
-import edu.wpi.first.units.measure.Time
 import edu.wpi.first.units.measure.Velocity
 import edu.wpi.first.units.measure.Voltage
-import edu.wpi.first.wpilibj2.command.Commands
 import frc.tecdroid3354.utils.Sprocket
+import frc.tecdroid3354.utils.controlProfiles.AngularMotionTargets
+import frc.tecdroid3354.utils.controlProfiles.LinearMotionTargets
 import frc.tecdroid3354.utils.hertz
 import frc.tecdroid3354.utils.mechanical.Reduction
+import frc.tecdroid3354.utils.rotationsPerSecond
+import frc.tecdroid3354.utils.rotationsPerSecondCubed
+import frc.tecdroid3354.utils.rotationsPerSecondSquared
 import frc.tecdroid3354.utils.safety.MeasureLimits
 import java.util.Optional
 
@@ -108,6 +112,7 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
     //
     fun getPosition(): Angle { return motor.position.value }
     fun getVelocity(): AngularVelocity { return motor.velocity.value }
+    fun getAcceleration(): AngularAcceleration { return motor.acceleration.value }
     fun getTemperature(): Temperature { return motor.deviceTemp.value }
     fun getOutputVoltage(): Voltage { return motor.motorVoltage.value }
     fun getSupplyCurrent(): Current { return motor.supplyCurrent.value }
@@ -289,19 +294,15 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
      *
      * The program will throw an [Exception] and stop if you do not pass the necessary parameters for your requested
      * control type (i.e., calling [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] without specifying the subsystem
-     * target velocity, acceleration time and jerk time).
+     * motion targets).
      *
-     * @param subsystemVelocity is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
-     * @param subsystemAccelerationTime is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
-     * @param subsystemJerkTime is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
+     * @param newSubsystemMotionTargets is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
      * @param expoKV is Required for [OpPositionControlRequests.POSITION_DYNAMIC_EXPO_TORQUE] only
      * @param expoKA is Required for [OpPositionControlRequests.POSITION_DYNAMIC_EXPO_TORQUE] only
      */
     fun angularSubsystemPositionDynamicRequest(controlType: OpPositionControlRequests, subsystemPosition: Angle,
                                                limits: MeasureLimits<AngleUnit>, reduction: Reduction,
-                                               subsystemVelocity: Optional<AngularVelocity>,
-                                               subsystemAccelerationTime: Optional<Time>,
-                                               subsystemJerkTime: Optional<Time>,
+                                               newSubsystemMotionTargets: Optional<AngularMotionTargets>,
                                                expoKV: Optional<Double>, expoKA: Optional<Double>, slot: Int = 0) {
         if (controlType !in listOf( // Make sure user didn't try to use a non-dynamic request type
                 OpPositionControlRequests.POSITION_DYNAMIC_TORQUE,
@@ -311,15 +312,16 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
         val subsystemClampedAngle: Angle = limits.coerceIn(subsystemPosition) as Angle
         val motorTransformedAngle: Angle = reduction.unapply(subsystemClampedAngle)
 
-        if (subsystemVelocity.isPresent and subsystemAccelerationTime.isPresent and subsystemJerkTime.isPresent) { // DynamicTorque
-            val motorTransformedVelocity: AngularVelocity = reduction.unapply(subsystemVelocity.get())
-            val motorAcceleration: AngularAcceleration = motorTransformedVelocity.div(subsystemAccelerationTime.get())
-            val motorJerk: Velocity<AngularAccelerationUnit> = motorAcceleration.div(subsystemJerkTime.get())
+        if (newSubsystemMotionTargets.isPresent) { // DynamicTorque
+            val motorTargets: MotionMagicConfigs = KrakenMotors.configureAngularMotionMagic(
+                newSubsystemMotionTargets.get(), reduction
+            )
             handlePositionRequest(
                 requestType = controlType,
                 position = motorTransformedAngle, slot = slot,
-                velocity = Optional.of(motorTransformedVelocity), acceleration = Optional.of(motorAcceleration),
-                jerk = Optional.of(motorJerk),
+                velocity = Optional.of(motorTargets.MotionMagicCruiseVelocity.rotationsPerSecond),
+                acceleration = Optional.of(motorTargets.MotionMagicAcceleration.rotationsPerSecondSquared),
+                jerk = Optional.of(motorTargets.MotionMagicJerk.rotationsPerSecondCubed),
                 expoKV = Optional.empty(), expoKA = Optional.empty()
             )
         }
@@ -366,17 +368,13 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
      *
      * Intended for dynamic requests only. An [Exception] will be thrown otherwise.
      *
-     * @param subsystemVelocity is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
-     * @param subsystemAccelerationTime is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
-     * @param subsystemJerkTime is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
+     * @param newSubsystemMotionTargets is Required for [OpPositionControlRequests.POSITION_DYNAMIC_TORQUE] only
      * @param expoKV is Required for [OpPositionControlRequests.POSITION_DYNAMIC_EXPO_TORQUE] only
      * @param expoKA is Required for [OpPositionControlRequests.POSITION_DYNAMIC_EXPO_TORQUE] only
      */
     fun linearSubsystemPositionDynamicRequest(controlType: OpPositionControlRequests, subsystemDisplacement: Distance,
                                               limits: MeasureLimits<DistanceUnit>, sprocket: Sprocket, reduction: Reduction,
-                                              subsystemVelocity: Optional<LinearVelocity>,
-                                              subsystemAccelerationTime: Optional<Time>,
-                                              subsystemJerkTime: Optional<Time>,
+                                              newSubsystemMotionTargets: Optional<LinearMotionTargets>,
                                               expoKV: Optional<Double>, expoKA: Optional<Double>,
                                               slot: Int = 0) {
         val linearToAngularSubsystemDisplacement = sprocket.linearDisplacementToAngularDisplacement(subsystemDisplacement)
@@ -384,12 +382,13 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
             sprocket.linearDisplacementToAngularDisplacement(limits.minimum as Distance) ..
                     sprocket.linearDisplacementToAngularDisplacement(limits.maximum as Distance))
 
-        if (subsystemVelocity.isPresent and subsystemAccelerationTime.isPresent and subsystemJerkTime.isPresent) {
-            val linearToAngularVelocity = sprocket.linearVelocityToAngularVelocity(subsystemVelocity.get())
+        if (newSubsystemMotionTargets.isPresent) {
+            // Just makes it angular, but still in mechanism units
+            val linearToAngularMotionTargets = newSubsystemMotionTargets.get().angularMotionTargets(sprocket)
 
             angularSubsystemPositionDynamicRequest(
                 controlType, linearToAngularSubsystemDisplacement, linearToAngularLimits, reduction,
-                Optional.of(linearToAngularVelocity), subsystemAccelerationTime, subsystemJerkTime,
+                Optional.of(linearToAngularMotionTargets),
                 Optional.empty(), Optional.empty(),
                 slot
             )
@@ -397,7 +396,7 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
         else if (expoKV.isPresent and expoKA.isPresent) { // DynamicExpoTorque
             angularSubsystemPositionDynamicRequest(
                 controlType, linearToAngularSubsystemDisplacement, linearToAngularLimits, reduction,
-                Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(),
                 expoKV, expoKA,
                 slot
             )
@@ -484,6 +483,45 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
     }
 
     /**
+     * Just unapplies the reduction to the given measurement.
+     */
+    fun getAngularSubsystemToMotorPosition(measurement: Angle, reduction: Reduction): Angle {
+        return reduction.unapply(measurement)
+    }
+    /**
+     * Just unapplies the reduction to the given measurement.
+     */
+    fun getAngularSubsystemToMotorVelocity(measurement: AngularVelocity, reduction: Reduction): AngularVelocity {
+        return reduction.unapply(measurement)
+    }
+
+    fun getAngularSubsystemToMotorAcceleration(measurement: AngularAcceleration, reduction: Reduction): AngularAcceleration {
+        return reduction.unapply(measurement)
+    }
+
+    /**
+     * Conversion as follows:
+     *
+     * Measurement (linear) -> Sprocket -> Measurement (angular) -> Reduction -> Motor
+     */
+    fun getLinearSubsystemToMotorPosition(measurement: Distance, reduction: Reduction, sprocket: Sprocket): Angle {
+        return reduction.unapply(
+            sprocket.linearDisplacementToAngularDisplacement(measurement)
+        )
+    }
+
+    /**
+     * Conversion as follows:
+     *
+     * Measurement (linear) -> Sprocket -> Measurement (angular) -> Reduction -> Motor
+     */
+    fun getLinearSubsystemToMotorVelocity(measurement: LinearVelocity, reduction: Reduction, sprocket: Sprocket): AngularVelocity {
+        return reduction.unapply(
+            sprocket.linearVelocityToAngularVelocity(measurement)
+        )
+    }
+
+    /**
      * Sets all unnecessary signals to 4Hz.
      * Only signals written inside the method are preserved for real-time usage.
      * Consult an Area Lead / Captain if you consider another signal as necessary.
@@ -493,9 +531,9 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
         with(motor) {
             position.setUpdateFrequency(100.0.hertz)
             velocity.setUpdateFrequency(100.0.hertz)
+            acceleration.setUpdateFrequency(100.0.hertz)
             motorVoltage.setUpdateFrequency(100.0.hertz)    // Required by followers (Phoenix 6 documentation)
             supplyCurrent.setUpdateFrequency(100.0.hertz)
-            acceleration.setUpdateFrequency(50.0.hertz)
             controlMode.setUpdateFrequency(100.0.hertz)
             dutyCycle.setUpdateFrequency(100.0.hertz)       // Required by followers (Phoenix 6 documentation)
             torqueCurrent.setUpdateFrequency(100.0.hertz)   // Required by followers (Phoenix 6 documentation)

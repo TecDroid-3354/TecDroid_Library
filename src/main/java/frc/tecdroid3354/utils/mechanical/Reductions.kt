@@ -5,6 +5,8 @@ import edu.wpi.first.units.Unit
 
 open class Reduction(private val ratio: Double) {
 
+    fun getRatio(): Double = ratio
+
     fun apply(value: Double): Double = value / ratio
     fun unapply(value: Double): Double = value * ratio
 

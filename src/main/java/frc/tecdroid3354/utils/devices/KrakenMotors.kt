@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs
 import com.ctre.phoenix6.configs.MotorOutputConfigs
 import com.ctre.phoenix6.configs.Slot0Configs
 import com.ctre.phoenix6.configs.Slot1Configs
+import com.ctre.phoenix6.configs.Slot2Configs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.InvertedValue
@@ -70,7 +71,8 @@ object KrakenMotors {
      * @return A [TalonFXConfiguration] with the desired configurations.
      */
     fun createTalonFXConfiguration(motorOutputs: Optional<MotorOutputConfigs>, currentLimits: Optional<CurrentLimitsConfigs>,
-                                   slot0: Optional<Slot0Configs>, slot1: Optional<Slot1Configs>, motionMagic: Optional<MotionMagicConfigs>)
+                                   slot0: Optional<Slot0Configs>, slot1: Optional<Slot1Configs>, slot2: Optional<Slot2Configs>,
+                                   motionMagic: Optional<MotionMagicConfigs>)
             : TalonFXConfiguration {
         val talonConfig = TalonFXConfiguration()
 
@@ -89,6 +91,10 @@ object KrakenMotors {
         if (slot1.isPresent) {
             talonConfig.Slot1 = slot1.get()
         } else { talonConfig.Slot1 = defaultConfig.Slot1 }
+
+        if (slot2.isPresent) {
+            talonConfig.Slot2 = slot2.get()
+        } else { talonConfig.Slot2 = defaultConfig.Slot2 }
 
         if (motionMagic.isPresent) {
             talonConfig.MotionMagic = motionMagic.get()
@@ -160,6 +166,23 @@ object KrakenMotors {
             .withKV(controlGains.v)
             .withKA(controlGains.a)
             .withKG(controlGains.g)
+    }
+
+    /**
+     * Takes the desired [ControlGains] and returns a [Slot2Configs] with said configurations.
+     * @param controlGains The desired [ControlGains].
+     * @return A [Slot2Configs] with the applied [ControlGains].
+     */
+    fun configureSlot2(controlGains: ControlGains): Slot2Configs {
+        return Slot2Configs()
+            .withKP(controlGains.p)
+            .withKI(controlGains.i)
+            .withKD(controlGains.d)
+            .withKS(controlGains.s)
+            .withKV(controlGains.v)
+            .withKA(controlGains.a)
+            .withKG(controlGains.g)
+
     }
 
     /**
