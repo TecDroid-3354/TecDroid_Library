@@ -1,12 +1,15 @@
 package frc.tecdroid3354.constants
 
+import edu.wpi.first.units.AngleUnit
 import edu.wpi.first.units.AngularVelocityUnit
 import edu.wpi.first.units.DistanceUnit
 import edu.wpi.first.units.Units.DegreesPerSecond
 import edu.wpi.first.units.Units.MetersPerSecond
 import edu.wpi.first.units.Units.Seconds
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
+import frc.tecdroid3354.subsystems.angularPosition.JointConstants
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelConstants
 import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants
 import frc.tecdroid3354.utils.controlProfiles.AngularMotionTargets
@@ -14,12 +17,14 @@ import frc.tecdroid3354.utils.controlProfiles.LinearMotionTargets
 import frc.tecdroid3354.utils.controlProfiles.LoggedTunableNumber
 import frc.tecdroid3354.utils.controlProfiles.TunableControlGains
 import frc.tecdroid3354.utils.controlProfiles.ControlGains
+import frc.tecdroid3354.utils.degrees
 import frc.tecdroid3354.utils.devices.OpPositionControlRequests
 import frc.tecdroid3354.utils.devices.OpPositionControlRequests.POSITION_DYNAMIC_TORQUE
 import frc.tecdroid3354.utils.devices.OpVelocityControlRequests
 import frc.tecdroid3354.utils.devices.OpVelocityControlRequests.VELOCITY_TORQUE
 import frc.tecdroid3354.utils.inches
 import frc.tecdroid3354.utils.metersPerSecond
+import frc.tecdroid3354.utils.radiansPerSecond
 import frc.tecdroid3354.utils.rotationsPerMinute
 import frc.tecdroid3354.utils.safety.MeasureLimits
 import frc.tecdroid3354.utils.seconds
@@ -36,6 +41,12 @@ object SubsystemsMovementLimits {
         MeasureLimits(0.0.rotationsPerMinute .. 4_200.0.rotationsPerMinute)
 
     //
+    // JOINT ONLY
+    //
+    val JOINT_POSITION_LIMITS: MeasureLimits<AngleUnit> =
+        MeasureLimits(20.0.degrees .. 100.0.degrees)
+
+    //
     // ELEVATOR ONLY
     //
     val ELEVATOR_DISPLACEMENT_LIMITS: MeasureLimits<DistanceUnit> =
@@ -47,8 +58,9 @@ object SubsystemsMovementLimits {
  * The corresponding value must be called inside the subsystem's hardware layer when commanding the motor(s) to move.
  */
 object SubsystemsControlRequests {
-    val FLYWHEEL_CONTROL_TYPE: OpVelocityControlRequests = VELOCITY_TORQUE
-    val ELEVATOR_CONTROL_TYPE: OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
+    val FLYWHEEL_CONTROL_TYPE   : OpVelocityControlRequests = VELOCITY_TORQUE
+    val JOINT_CONTROL_TYPE      : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
+    val ELEVATOR_CONTROL_TYPE   : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
 }
 
 object SubsystemsPresetTargets {
@@ -56,6 +68,12 @@ object SubsystemsPresetTargets {
     // FLYWHEEL ONLY
     //
     val FLYWHEEL_PRESET_RPM: AngularVelocity = 3_200.0.rotationsPerMinute
+
+    //
+    // JOINT ONLY
+    //
+    val JOINT_IDLE_ANGLE: Angle = 45.0.degrees
+    val JOINT_HOME_ANGLE: Angle = 90.0.degrees
 
     //
     // ELEVATOR ONLY
@@ -74,6 +92,12 @@ object SubsystemsTunableTargets {
     //
     val FLYWHEEL_MANUAL_RPM: LoggedTunableNumber =
         LoggedTunableNumber("${ FlywheelConstants.Telemetry.SUBSYSTEM_TAB }/Manual RPMs", 1_800.0)
+
+    //
+    // JOINT ONLY
+    //
+    val JOINT_MANUAL_TARGET_DEGREES: LoggedTunableNumber =
+        LoggedTunableNumber("${ JointConstants.Telemetry.SUBSYSTEM_TAB }/Manual Target (deg)", 45.0)
 
     //
     // ELEVATOR ONLY
@@ -101,6 +125,9 @@ object SubsystemsControlGains {
      val FLYWHEEL_MOTOR_SECONDARY_GAINS: TunableControlGains = TunableControlGains(FlywheelConstants.Telemetry.SUBSYSTEM_SECONDARY_GAINS,
          kP = 0.5, kI = 0.0, kD = 0.0, kS = 0.0, kV = 0.0, kA = 0.0, kG = 0.0) // Not Tuned
 
+     val JOINT_MOTOR_PRIMARY_GAINS: TunableControlGains = TunableControlGains(JointConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
+         kP = 87.5, kI = 0.0, kD = 12.5, kS = 61.0, kV = 0.0, kA = 0.0, kG = 189.0) // Tuned in SIMULATION -> Torque Request
+
      //
      // ELEVATOR ONLY
      //
@@ -127,6 +154,23 @@ object SubsystemsMotionTargets {
         )
 
     //
+    // JOINT ONLY
+    //
+    val JOINT_PRIMARY_MOTION_TARGETS: AngularMotionTargets =
+        AngularMotionTargets( // From 0 radians to PI/2 radians ~ 1.2 seconds (1 for PI/2, 1 from acc, 1 from jerk)
+            Math.PI.div(2).radiansPerSecond,
+            0.1.seconds,
+            0.1.seconds
+        )
+
+    val JOINT_SECONDARY_MOTION_TARGETS: AngularMotionTargets =
+        AngularMotionTargets( // Half the cruise velocity of Primary Targets
+            Math.PI.div(4).radiansPerSecond,
+            0.1.seconds,
+            0.1.seconds
+        )
+
+    //
     // ELEVATOR ONLY
     //
     val ELEVATOR_PRIMARY_MOTION_TARGETS: LinearMotionTargets = // Standard motion
@@ -137,9 +181,9 @@ object SubsystemsMotionTargets {
         )
 
     val ELEVATOR_SECONDARY_MOTION_TARGETS: LinearMotionTargets = // For manual motion
-        LinearMotionTargets( // Slower for showcase, still usable for tuning since both targets use Slot0
-            0.8.metersPerSecond,
-            0.8.seconds,
-            0.5.seconds,
+        LinearMotionTargets( // Same as Primary for testing, commented values would be for real manually-controlled motion
+            1.2.metersPerSecond, // 0.8
+            0.1.seconds, // 0.8
+            0.1.seconds, // 0.5
         )
 }

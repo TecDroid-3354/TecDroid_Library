@@ -91,6 +91,8 @@ object Robot : LoggedRobot() {
 
         CommandScheduler.getInstance().run()
 
+        RobotContainer.robotVisualizer.updateRobotVisualization()
+
         // Return to non-RT thread priority (do not modify the first argument)
         // Threads.setCurrentThreadPriority(false, 10);
     }

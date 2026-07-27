@@ -45,7 +45,6 @@ class FlywheelIOTalonFX: FlywheelIO {
         inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
         inputs.leadMotorVelocity.mut_replace(leadMotorController.getVelocity())
         inputs.leadMotorAcceleration.mut_replace(leadMotorController.getAcceleration())
-        inputs.followerMotorAcceleration.mut_replace(followerMotorController.getAcceleration())
         inputs.leadMotorTemperature.mut_replace(leadMotorController.getTemperature())
         inputs.leadMotorOutputVoltage.mut_replace(leadMotorController.getOutputVoltage())
         inputs.leadMotorSupplyCurrent.mut_replace(leadMotorController.getSupplyCurrent())
@@ -53,6 +52,7 @@ class FlywheelIOTalonFX: FlywheelIO {
 
         inputs.isFollowerMotorConnected = followerMotorController.getIsConnected()
         inputs.followerMotorVelocity.mut_replace(followerMotorController.getVelocity())
+        inputs.followerMotorAcceleration.mut_replace(followerMotorController.getAcceleration())
         inputs.followerMotorTemperature.mut_replace(followerMotorController.getTemperature())
         inputs.followerMotorOutputVoltage.mut_replace(followerMotorController.getOutputVoltage())
         inputs.followerMotorSupplyCurrent.mut_replace(followerMotorController.getSupplyCurrent())

@@ -21,6 +21,8 @@ import edu.wpi.first.units.Units.MetersPerSecondPerSecond
 import edu.wpi.first.units.Units.Milliseconds
 import edu.wpi.first.units.Units.Pounds
 import edu.wpi.first.units.Units.Radians
+import edu.wpi.first.units.Units.RadiansPerSecond
+import edu.wpi.first.units.Units.RadiansPerSecondPerSecond
 import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.Units.RotationsPerSecond
 import edu.wpi.first.units.Units.RotationsPerSecondPerSecond
@@ -78,12 +80,14 @@ val Double.kilogramSquareMeters         : MomentOfInertia       ; get() = Kilogr
 // Velocity
 val Double.metersPerSecond              : LinearVelocity        ; get() = MetersPerSecond.of(this)
 val Double.degreesPerSecond             : AngularVelocity       ; get() = DegreesPerSecond.of(this)
+val Double.radiansPerSecond             : AngularVelocity       ; get() = RadiansPerSecond.of(this)
 val Double.rotationsPerSecond           : AngularVelocity       ; get() = RotationsPerSecond.of(this)
 val Double.rotationsPerMinute           : AngularVelocity       ; get() = RotationsPerSecond.of(this.div(60.0))
 
 // Acceleration
 val Double.metersPerSecondSquared       : LinearAcceleration    ; get() = MetersPerSecondPerSecond.of(this)
 val Double.degreesPerSecondSquared      : AngularAcceleration   ; get() = DegreesPerSecondPerSecond.of(this)
+val Double.radiansPerSecondSquared      : AngularAcceleration   ; get() = RadiansPerSecondPerSecond.of(this)
 val Double.rotationsPerSecondSquared    : AngularAcceleration   ; get() = RotationsPerSecondPerSecond.of(this)
 
 // Jerk
@@ -115,12 +119,14 @@ val MomentOfInertia.kilogramSquareMeters: Double                ; get() = this.`
 // Velocity
 val LinearVelocity.metersPerSecond      : Double                ; get() = this.`in`(MetersPerSecond)
 val AngularVelocity.degreesPerSecond    : Double                ; get() = this.`in`(DegreesPerSecond)
+val AngularVelocity.radiansPerSecond    : Double                ; get() = this.`in`(RadiansPerSecond)
 val AngularVelocity.rotationsPerSecond  : Double                ; get() = this.`in`(RotationsPerSecond)
 val AngularVelocity.rotationsPerMinute  : Double                ; get() = this.`in`(RotationsPerSecond).times(60.0)
 
 // Acceleration
 val LinearAcceleration.metersPerSecondSquared     : Double      ; get() = this.`in`(MetersPerSecondPerSecond)
 val AngularAcceleration.degreesPerSecondSquared   : Double      ; get() = this.`in`(DegreesPerSecondPerSecond)
+val AngularAcceleration.radiansPerSecondSquared   : Double      ; get() = this.`in`(RadiansPerSecondPerSecond)
 val AngularAcceleration.rotationsPerSecondSquared : Double      ; get() = this.`in`(RotationsPerSecondPerSecond)
 
 // Jerk

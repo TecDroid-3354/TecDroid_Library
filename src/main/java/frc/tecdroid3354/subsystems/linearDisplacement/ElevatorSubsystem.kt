@@ -1,15 +1,18 @@
 package frc.tecdroid3354.subsystems.linearDisplacement
 
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.tecdroid3354.constants.SubsystemsControlGains
+import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
 import frc.tecdroid3354.utils.inches
 import org.littletonrobotics.junction.Logger
+import java.util.function.Supplier
 
 /**
  * Intended to act as a bridge between the I/O layer and the rest of the program.
@@ -22,7 +25,6 @@ class ElevatorSubsystem(private val io: ElevatorIO): SubsystemBase(ElevatorConst
      * [ElevatorIO] without modifying this class.
      */
     private val inputs: ElevatorIOInputsAutoLogged = ElevatorIOInputsAutoLogged()
-    private val visualizer: ElevatorVisualization = ElevatorVisualization()
 
     /**
      * Alerts to inform driver / developers something went wrong
@@ -52,9 +54,6 @@ class ElevatorSubsystem(private val io: ElevatorIO): SubsystemBase(ElevatorConst
         leadMotorDisconnectedAlert.set(inputs.isLeadMotorConnected.not())
         followerMotorDisconnectedAlert.set(inputs.isFollowerMotorConnected.not())
 
-        // Update 2d and 3d (if applicable) visualization of the mechanism. Mechanism is logged inside the method.
-        visualizer.updateElevatorVisualization(inputs.elevatorDisplacement)
-
         if (SubsystemsControlGains.ELEVATOR_MOTOR_PRIMARY_GAINS.hadTunableUpdated()) {
             io.updateElevatorMotorsControlGains(0) // Updates slot0 because is the primary set
         }
@@ -77,12 +76,14 @@ class ElevatorSubsystem(private val io: ElevatorIO): SubsystemBase(ElevatorConst
     }
 
     fun setElevatorIdleDisplacement(): Runnable {
-        return io.setElevatorIdleDisplacement()
+        return io.setElevatorTargetDisplacement(SubsystemsPresetTargets.ELEVATOR_IDLE_DISPLACEMENT)
     }
 
     fun setElevatorHomeDisplacement(): Runnable {
-        return io.setElevatorHomeDisplacement()
+        return io.setElevatorTargetDisplacement(SubsystemsPresetTargets.ELEVATOR_HOME_DISPLACEMENT)
     }
+
+    fun getElevatorDisplacement(): Distance = inputs.elevatorDisplacement
 
     /**
      * Fabricates an [InstantCommand] switching the Neutral / Idle mode of the motors to coast through the I/O layer.

@@ -93,47 +93,47 @@ public interface FlywheelIO {
     void updateFlywheelMotorsControlGains(int slot);
 
     /**
-     * Sets the flywheel to the manually set velocity through Elastic. This resets with every code reload.
-     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
+     * Sets the subsystem to the manually set velocity through Elastic. This resets with every code reload.
+     * <p>Make sure to update your subsystem target velocity variable for telemetry</p>
      * @see #updateFlywheelManualVelocity(AngularVelocity)
-     * @return A {@link Runnable} setting the flywheel manual target velocity
+     * @return A {@link Runnable} setting the subsystem manual target velocity
      */
     Runnable enableFlywheelManualVelocity();
 
     /**
      * Only if applicable.
-     * <p>Sets the flywheel to the preset velocity stored in constants.</p>
+     * <p>Sets the subsystem to the preset velocity stored in constants.</p>
      * <p>This does not change live, only in-code.</p>
-     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
-     * @return A {@link Runnable} setting the flywheel preset target velocity
+     * <p>Make sure to update your subsystem target velocity variable for telemetry</p>
+     * @return A {@link Runnable} setting the subsystem preset target velocity
      */
     Runnable enableFlywheelPresetVelocity();
 
     /**
-     * Only if applicable. For distance based / state based flywheels specifically.
-     * <p>Sets the calculated flywheel velocity, i.e. through interpolation / polynomial</p>
+     * Only if applicable. For distance based / state based subsystems specifically.
+     * <p>Sets the calculated subsystem velocity, i.e. through interpolation / polynomial</p>
      * <p>Calculation is delegated to a separate method</p>
-     * <p>Make sure to update your flywheel target velocity variable for telemetry</p>
+     * <p>Make sure to update your subsystem target velocity variable for telemetry</p>
      * @param flywheelCalculatedVelocity Flywheel velocity; must be calculated beforehand.
-     * @return A {@link Runnable} setting the flywheel calculated target velocity
+     * @return A {@link Runnable} setting the subsystem calculated target velocity
      */
     Runnable enableFlywheelCalculatedVelocity(AngularVelocity flywheelCalculatedVelocity);
 
     /**
-     * Disables the flywheel motors.
-     * @return A {@link Runnable} stopping the flywheel
+     * Disables the subsystem motors.
+     * @return A {@link Runnable} stopping the subsystem
      */
     Runnable stopFlywheel();
 
     /**
      * Merely changes the Neutral / Idle mode of the motors to coast for easier manipulation.
-     * @return A {@link Runnable} coasting all flywheel motors
+     * @return A {@link Runnable} coasting all subsystem motors
      */
     Runnable coastFlywheelMotors();
 
     /**
      * Merely changes the Neutral / Idle mode of the motors to brake to avoid unintended movement during match.
-     * @return A {@link Runnable} braking all flywheel motors
+     * @return A {@link Runnable} braking all subsystem motors
      */
     Runnable brakeFlywheelMotors();
 

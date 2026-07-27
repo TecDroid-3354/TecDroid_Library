@@ -2,10 +2,16 @@ package frc.tecdroid3354.core
 
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.Trigger
+import frc.tecdroid3354.RobotVisualizer
 import frc.tecdroid3354.constants.RobotConstants
 import frc.tecdroid3354.constants.RobotMode
+import frc.tecdroid3354.subsystems.angularPosition.JointIO
+import frc.tecdroid3354.subsystems.angularPosition.JointIOSim
+import frc.tecdroid3354.subsystems.angularPosition.JointIOTalonFX
+import frc.tecdroid3354.subsystems.angularPosition.JointSubsystem
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelIO
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelIOSim
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelIOTalonFX
@@ -31,8 +37,12 @@ object RobotContainer
 {
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private val driverController = CommandXboxController(RobotConstants.MAIN_CONTROLLER_PORT)
+
+    private lateinit var jointSubsystem: JointSubsystem
     private lateinit var elevatorSubsystem: ElevatorSubsystem
     private lateinit var flywheelSubsystem: FlywheelSubsystem
+
+    lateinit var robotVisualizer: RobotVisualizer
         
     init
     {
@@ -67,22 +77,31 @@ object RobotContainer
      * subclasses such for [Xbox][CommandXboxController]/[PS4][edu.wpi.first.wpilibj2.command.button.CommandPS4Controller]
      * controllers or [Flight joysticks][edu.wpi.first.wpilibj2.command.button.CommandJoystick].
      */
-    private fun configureBindings() {
+    private fun configureBindings() { // Would leave better commands in template, but I'm using a keyboard.
         driverController.a()
             .whileTrue(elevatorSubsystem.setElevatorIdleDisplacement().InstantCommand(elevatorSubsystem))
             .onFalse(elevatorSubsystem.setElevatorHomeDisplacement().InstantCommand(elevatorSubsystem))
 
         driverController.y()
-            .whileTrue(elevatorSubsystem.setElevatorManualTargetDisplacement().InstantCommand(elevatorSubsystem))
-            .onFalse(elevatorSubsystem.setElevatorHomeDisplacement().InstantCommand(elevatorSubsystem))
+            .whileTrue(
+                SequentialCommandGroup(
+                    jointSubsystem.setJointManualPosition().InstantCommand(jointSubsystem),
+                    elevatorSubsystem.setElevatorManualTargetDisplacement().InstantCommand(elevatorSubsystem)
+                )
+            )
+            .onFalse(
+                SequentialCommandGroup(
+                    elevatorSubsystem.setElevatorHomeDisplacement().InstantCommand(elevatorSubsystem),
+                    jointSubsystem.setJointHomePosition().InstantCommand(jointSubsystem)
+                )
+            )
 
         driverController.b()
-            .whileTrue(flywheelSubsystem.enableFlywheelPresetVelocity().InstantCommand(flywheelSubsystem))
-            .onFalse(flywheelSubsystem.stopFlywheel().InstantCommand(flywheelSubsystem))
+            .whileTrue(jointSubsystem.setJointIdlePosition().InstantCommand(jointSubsystem))
 
         driverController.x()
-            .whileTrue(flywheelSubsystem.enableFlywheelManualVelocity().InstantCommand(flywheelSubsystem))
-            .onFalse(flywheelSubsystem.stopFlywheel().InstantCommand(flywheelSubsystem))
+            .whileTrue(jointSubsystem.setJointManualPosition().InstantCommand(jointSubsystem))
+            .onFalse(jointSubsystem.setJointHomePosition().InstantCommand(jointSubsystem))
     }
 
     /**
@@ -91,17 +110,25 @@ object RobotContainer
     private fun initializeSubsystems() {
         when(RobotConstants.ROBOT_MODE) {
             RobotMode.REAL -> {
+                jointSubsystem = JointSubsystem(JointIOTalonFX())
                 elevatorSubsystem = ElevatorSubsystem(ElevatorIOTalonFX())
                 flywheelSubsystem = FlywheelSubsystem(FlywheelIOTalonFX())
             }
             RobotMode.SIM -> {
+                jointSubsystem = JointSubsystem(JointIOSim())
                 elevatorSubsystem = ElevatorSubsystem(ElevatorIOSim())
                 flywheelSubsystem = FlywheelSubsystem(FlywheelIOSim())
             }
             RobotMode.REPLAY -> {
+                jointSubsystem = JointSubsystem(JointIO.DummyJointIO())
                 elevatorSubsystem = ElevatorSubsystem(ElevatorIO.DummyElevatorIO())
                 flywheelSubsystem = FlywheelSubsystem(FlywheelIO.DummyFlywheelIO())
             }
         }
+
+        robotVisualizer = RobotVisualizer( // Independent of robot mode. Initialized at last to give it the parameters.
+            { jointSubsystem.getJointPosition() },
+            { elevatorSubsystem.getElevatorDisplacement() }
+        )
     }
 }

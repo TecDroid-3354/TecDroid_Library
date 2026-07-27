@@ -2,11 +2,15 @@ package frc.tecdroid3354.constants
 
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.MomentOfInertia
 import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Time
 import edu.wpi.first.wpilibj.RobotBase
+import edu.wpi.first.wpilibj.util.Color
+import edu.wpi.first.wpilibj.util.Color8Bit
+import frc.tecdroid3354.utils.degrees
 import frc.tecdroid3354.utils.degreesCelsius
 import frc.tecdroid3354.utils.inches
 import frc.tecdroid3354.utils.kilogramSquareMeters
@@ -63,8 +67,8 @@ object RobotTransformations {
  * to prevent any mismatch between IDs.
  */
 object CanBuses {
-    const val MAIN_CANBUS       : String = "rio"
-    const val ALTERNATE_CANBUS  : String = "canivore"
+    const val RIO_CANBUS         : String = "rio"
+    const val CANIVORE_CANBUS    : String = "canivore"
 }
 
 object SimConstants {
@@ -72,7 +76,7 @@ object SimConstants {
 
     // Based off Falcon 500, which should be fairly similar to Kraken x60 MOI
     val ESTIMATED_MOTOR_MOI         : MomentOfInertia = (3.6e-5).kilogramSquareMeters
-    const val LB_SQUARED_IN_TO_KG_SQUARED_M: Double = 0.0002926397
+    const val LB_SQUARED_IN_TO_KG_SQUARED_M: Double = 0.00029263965
 }
 
 /**
@@ -83,4 +87,30 @@ object RobotTelemetry {
     const val ROBOT_MODE_TAB                    : String = "RobotMode"
     const val SUBSYSTEM_VISUALIZATION_2D_TAB    : String = "Subsystems Mechanism2d"
     const val SUBSYSTEM_VISUALIZATION_3D_TAB    : String = "Subsystems Pose3d"
+}
+
+/**
+ * For all 2D / 3D robot visualization constants, which will then assemble all subsystems inside [frc.tecdroid3354.RobotVisualizer]
+ */
+object RobotVisualization {
+    const val MECHANISMS_ORIGIN_2D_NAME                     : String = "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB} Origin"
+    const val MECHANISMS_ARM_GUIDING_RAIL_2D_NAME           : String = "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB} Guiding Rail"
+    const val MECHANISMS_ARM_DISPLACEMENT_LIGAMENT_2D_NAME  : String = "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB} Displacement Ligament"
+    const val MECHANISMS_ARM_END_EFFECTOR_2D_NAME           : String = "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB} Carriage"
+
+    val CANVAS_WIDTH                                        : Distance = 5.0.meters
+    val CANVAS_HEIGHT                                       : Distance = 3.0.meters
+    val CANVAS_COLOR                                        : Color8Bit = Color8Bit(Color.kDarkGray)
+
+    val ARM_GUIDING_RAIL_WIDTH                              : Double = 6.0 // Who knows the unit of this
+    val GUIDING_RAIL_COLOR                                  : Color8Bit = Color8Bit(Color.kDarkViolet)
+
+    val ARM_DISPLACEMENT_LIGAMENT_WIDTH                     : Double = 4.0
+    val ARM_DISPLACEMENT_LIGAMENT_INITIAL_ANGLE             : Angle = 0.0.degrees // Relative to guiding rail
+    val ARM_DISPLACEMENT_LIGAMENT_COLOR                     : Color8Bit = Color8Bit(Color.kBlack)
+
+    val ARM_END_EFFECTOR_WIDTH                              : Double = 6.0
+    val ARM_END_EFFECTOR_HEIGHT                             : Distance = 0.05.meters
+    val ARM_END_EFFECTOR_RELATIVE_ANGLE                     : Angle = 0.0.degrees // Relative to displacement ligament
+    val ARM_END_EFFECTOR_COLOR                              : Color8Bit = Color8Bit(Color.kGold)
 }

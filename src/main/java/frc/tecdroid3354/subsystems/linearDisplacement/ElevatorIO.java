@@ -92,30 +92,16 @@ public interface ElevatorIO {
     void updateElevatorMotorsControlGains(int slot);
 
     /**
-     * Changes the target displacement of the elevator to the one set
+     * Changes the target displacement of the subsystem to the one set
      * in {@link #updateElevatorManualDisplacement(Distance)}
      */
     Runnable setElevatorManualTargetDisplacement();
 
     /**
-     * Changes the target displacement of the elevator.
-     * @param elevatorTargetDisplacement The desired displacement for the elevator.
+     * Changes the target displacement of the subsystem.
+     * @param elevatorTargetDisplacement The desired displacement for the subsystem.
      */
     Runnable setElevatorTargetDisplacement(Distance elevatorTargetDisplacement);
-
-    /**
-     * Intended to set an idle displacement, which could be a neutral position while waiting for another command.
-     * Might defer from {@link #setElevatorHomeDisplacement()}; if it's not the case, delete this method.
-     * @return a {@link Runnable} idling the elevator.
-     */
-    Runnable setElevatorIdleDisplacement();
-
-    /**
-     * Intended to set displacement = 0. Might defer from {@link #setElevatorIdleDisplacement()}; if it's not
-     * the case, delete the idle method.
-     * @return a {@link Runnable} homing the elevator.
-     */
-    Runnable setElevatorHomeDisplacement();
 
     /**
      * Stops the Elevator motors. Intended for SysId, or an abrupt manual stop.
@@ -170,16 +156,6 @@ public interface ElevatorIO {
 
         @Override
         public Runnable setElevatorTargetDisplacement(Distance elevatorTargetDisplacement) {
-            return null;
-        }
-
-        @Override
-        public Runnable setElevatorIdleDisplacement() {
-            return null;
-        }
-
-        @Override
-        public Runnable setElevatorHomeDisplacement() {
             return null;
         }
 

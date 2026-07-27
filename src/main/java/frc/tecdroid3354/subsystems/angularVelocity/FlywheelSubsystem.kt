@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.Logger
 import kotlin.math.pow
 
 class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelConstants.Telemetry.SUBSYSTEM_TAB) {
-    // Auto generated file (by @AutoLog annotation in FlywheelIOInputs)
+    // Auto generated file (by @AutoLog annotation in IO Layer)
     private val inputs: FlywheelIOInputsAutoLogged = FlywheelIOInputsAutoLogged()
 
     /**

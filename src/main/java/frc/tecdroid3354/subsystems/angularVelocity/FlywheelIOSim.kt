@@ -24,11 +24,11 @@ import frc.tecdroid3354.utils.seconds
 class FlywheelIOSim : FlywheelIO {
     private val subsystemSim: FlywheelSim = FlywheelSim(
         LinearSystemId.createFlywheelSystem(
-            DCMotor.getKrakenX60Foc(2),
+            DCMotor.getKrakenX60Foc(FlywheelConstants.Mechanical.NUMBER_OF_MOTORS),
             FlywheelConstants.Mechanical.MOMENT_OF_INERTIA.kilogramSquareMeters,
             FlywheelConstants.Mechanical.REDUCTION.getRatio()
         ),
-        DCMotor.getKrakenX60Foc(2)
+        DCMotor.getKrakenX60Foc(FlywheelConstants.Mechanical.NUMBER_OF_MOTORS),
     )
 
     private val leadMotorReal: OpTalonFX = OpTalonFX(

@@ -42,10 +42,10 @@ import java.util.Optional
 class ElevatorIOSim: ElevatorIO {
     private val subsystemSim: ElevatorSim = ElevatorSim( // WPILIB Physics Simulation
         LinearSystemId.createElevatorSystem(
-            DCMotor.getKrakenX60Foc(2), Mechanical.MASS.kilograms,
+            DCMotor.getKrakenX60Foc(Mechanical.NUMBER_OF_MOTORS), Mechanical.MASS.kilograms,
             Mechanical.SPROCKET.radius.meters, Mechanical.REDUCTION.getRatio()
         ),
-        DCMotor.getKrakenX60Foc(2),
+        DCMotor.getKrakenX60Foc(Mechanical.NUMBER_OF_MOTORS),
         (SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS.minimum as Distance).meters,
         (SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS.maximum as Distance).meters,
         true,
@@ -188,38 +188,6 @@ class ElevatorIOSim: ElevatorIO {
             leadMotorReal.linearSubsystemPositionDynamicRequest(
                 SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
                 elevatorTargetDisplacement,
-                SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
-                Mechanical.SPROCKET,
-                Mechanical.REDUCTION,
-                Optional.of(SubsystemsMotionTargets.ELEVATOR_PRIMARY_MOTION_TARGETS),
-                Optional.empty(), Optional.empty()
-            )
-        }
-    }
-
-    override fun setElevatorIdleDisplacement(): Runnable {
-        return {
-            this.elevatorTargetDisplacement.mut_replace(SubsystemsPresetTargets.ELEVATOR_IDLE_DISPLACEMENT)
-
-            leadMotorReal.linearSubsystemPositionDynamicRequest(
-                SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
-                SubsystemsPresetTargets.ELEVATOR_IDLE_DISPLACEMENT,
-                SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
-                Mechanical.SPROCKET,
-                Mechanical.REDUCTION,
-                Optional.of(SubsystemsMotionTargets.ELEVATOR_PRIMARY_MOTION_TARGETS),
-                Optional.empty(), Optional.empty()
-            )
-        }
-    }
-
-    override fun setElevatorHomeDisplacement(): Runnable {
-        return {
-            this.elevatorTargetDisplacement.mut_replace(SubsystemsPresetTargets.ELEVATOR_HOME_DISPLACEMENT)
-
-            leadMotorReal.linearSubsystemPositionDynamicRequest(
-                SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
-                SubsystemsPresetTargets.ELEVATOR_HOME_DISPLACEMENT,
                 SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
                 Mechanical.SPROCKET,
                 Mechanical.REDUCTION,

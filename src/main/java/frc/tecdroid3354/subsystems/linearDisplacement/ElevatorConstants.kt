@@ -39,7 +39,7 @@ object ElevatorConstants {
      * All constants for hardware identification
      */
     object Identification {
-        const val ELEVATOR_CANBUS_NAME: String = CanBuses.ALTERNATE_CANBUS
+        const val ELEVATOR_CANBUS_NAME: String = CanBuses.CANIVORE_CANBUS
         const val LEAD_MOTOR_ID = 10
         const val FOLLOWER_MOTOR_ID = 12
     }
@@ -48,9 +48,10 @@ object ElevatorConstants {
      * All values are placeholders and must be tuned for your specific robot.
      */
     object Mechanical {
-        val REDUCTION           : Reduction = Reduction(8.9285)                    // Gear ratio motor - elevator
-        val SPROCKET            : Sprocket = Sprocket.fromRadius((1.0 + 1.0 / 8.0).inches)    // Converts rotational motion into linear motion
-        val MASS                : Mass = 8.0.kilograms                          // Simulation purposes
+        val REDUCTION                   : Reduction = Reduction(8.9285)                    // Gear ratio motor - elevator
+        const val NUMBER_OF_MOTORS      : Int = 2
+        val SPROCKET                    : Sprocket = Sprocket.fromRadius((1.0 + 1.0 / 8.0).inches)    // Rotational -> Linear Motion
+        val MASS                        : Mass = 8.0.kilograms                          // Simulation purposes
     }
 
     /**
@@ -105,33 +106,5 @@ object ElevatorConstants {
             "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB}/${SUBSYSTEM_TAB}"
         const val SUBSYSTEM_VISUALIZATION_3D_TAB        : String =
             "${RobotTelemetry.SUBSYSTEM_VISUALIZATION_3D_TAB}/${SUBSYSTEM_TAB}"
-    }
-
-    /**
-     * Stores every value of the elevator visualization, unless the value belongs somewhere else
-     * (i.e., the minimum height of a subsystem)
-     */
-    object VisualizerConstants {
-        const val MECHANISM_ORIGIN_NAME                 : String = "${Telemetry.SUBSYSTEM_TAB} Origin"
-        const val MECHANISM_GUIDING_RAIL_NAME           : String = "${Telemetry.SUBSYSTEM_TAB} Guiding Rail"
-        const val MECHANISM_DISPLACEMENT_LIGAMENT_NAME  : String = "${Telemetry.SUBSYSTEM_TAB} Displacement Ligament"
-        const val MECHANISM_CARRIAGE_NAME               : String = "${Telemetry.SUBSYSTEM_TAB} Carriage"
-
-        val CANVAS_WIDTH                                : Distance = 1.0.meters
-        val CANVAS_HEIGHT                               : Distance = 3.0.meters
-        val CANVAS_COLOR                                : Color8Bit = Color8Bit(Color.kDarkGray)
-
-        val GUIDING_RAIL_WIDTH                          : Double = 6.0 // Who knows the unit of this
-        val GUIDING_RAIL_INITIAL_ANGLE                  : Angle = 90.0.degrees
-        val GUIDING_RAIL_COLOR                          : Color8Bit = Color8Bit(Color.kDarkViolet)
-
-        val DISPLACEMENT_LIGAMENT_WIDTH                 : Double = 4.0
-        val DISPLACEMENT_LIGAMENT_INITIAL_ANGLE         : Angle = 0.0.degrees // Relative to guiding rail
-        val DISPLACEMENT_LIGAMENT_COLOR                 : Color8Bit = Color8Bit(Color.kBlack)
-
-        val CARRIAGE_WIDTH                              : Double = 6.0
-        val CARRIAGE_HEIGHT                             : Distance = 0.15.meters
-        val CARRIAGE_RELATIVE_ANGLE                     : Angle = 0.0.degrees // Relative to displacement ligament
-        val CARRIAGE_COLOR                              : Color8Bit = Color8Bit(Color.kGold)
     }
 }

@@ -29,21 +29,24 @@ object FlywheelConstants {
      * Contains the ID Of any hardware related to the subsystem and the CANBUS it is on
      */
     object Identification {
-        const val FLYWHEEL_CANBUS_NAME: String = CanBuses.MAIN_CANBUS
+        const val FLYWHEEL_CANBUS_NAME: String = CanBuses.RIO_CANBUS
         const val LEAD_MOTOR_ID: Int = 0
         const val FOLLOWER_MOTOR_ID: Int = 1
     }
 
     /**
-     * Only for gear ratio ([Reduction]). In the case of linear subsystems, the sprocket also goes here.
+     * Only for gear ratio ([Reduction]) and MOI (for simulation)
+     * In the case of linear subsystems, the sprocket also goes here.
      */
     object Mechanical {
         val REDUCTION: Reduction = Reduction(1.0)
 
-        private const val NUMBER_OF_MOTORS: Double = 2.toDouble() // Because MOI.times() requires a double
+        const val NUMBER_OF_MOTORS: Int = 2
 
-        // From OnShape, accounting for the main roller and flywheel of Tutankabot as of 24/07/2026
-        private val MECHANISM_INERTIA: MomentOfInertia = (15.0.times(SimConstants.LB_SQUARED_IN_TO_KG_SQUARED_M)).kilogramSquareMeters
+        // From OnShape, accounting for the main roller and flywheel of Tutankabot as of 26/07/2026
+        // Note that simulation will probably reach target slower than our 2026 robot, as that one
+        // had 4 KrakenX60 dedicated to the flywheel, whereas this example assumes only 2.
+        private val MECHANISM_INERTIA: MomentOfInertia = (66.006.times(SimConstants.LB_SQUARED_IN_TO_KG_SQUARED_M)).kilogramSquareMeters
 
         // From mechanism perspective
         // Check: https://www.motioncontroltips.com/how-do-gearmotors-impact-reflected-mass-inertia-from-the-load/
@@ -52,7 +55,7 @@ object FlywheelConstants {
             MECHANISM_INERTIA
                 .plus(
                     SimConstants.ESTIMATED_MOTOR_MOI
-                    .times(NUMBER_OF_MOTORS)
+                    .times(NUMBER_OF_MOTORS.toDouble())
                     .times(REDUCTION.getRatio().pow(2))
                 )
     }
@@ -87,7 +90,7 @@ object FlywheelConstants {
         private val motorDirection: InvertedValue = InvertedValue.CounterClockwise_Positive
 
         private val supplyCurrentLimit: Current = 30.0.amps
-        private val statorCurrentLimit: Current = 80.0.amps
+        private val statorCurrentLimit: Current = 100.0.amps
 
         val initialMotorsConfiguration: TalonFXConfiguration = KrakenMotors.createTalonFXConfiguration(
             Optional.of<MotorOutputConfigs>(
@@ -113,9 +116,10 @@ object FlywheelConstants {
      * easier alert visualization in Elastic.
      */
     object Telemetry {
-        const val SUBSYSTEM_TAB: String = "Flywheel"
+        const val SUBSYSTEM_TAB                         : String = "Flywheel"
         const val SUBSYSTEM_PRIMARY_GAINS               : String = "$SUBSYSTEM_TAB Primary Gains"
         const val SUBSYSTEM_SECONDARY_GAINS             : String = "$SUBSYSTEM_TAB Secondary Gains"
+
         const val LEAD_MOTOR_CONNECTION_ALERT_TAB       : String =
             "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${Identification.FLYWHEEL_CANBUS_NAME}" +
                     "/${SUBSYSTEM_TAB} Motor id=${Identification.LEAD_MOTOR_ID}"

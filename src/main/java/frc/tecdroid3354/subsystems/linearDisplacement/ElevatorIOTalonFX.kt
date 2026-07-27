@@ -115,38 +115,6 @@ class ElevatorIOTalonFX : ElevatorIO {
         }
     }
 
-    override fun setElevatorIdleDisplacement(): Runnable {
-        return {
-            this.elevatorTargetDisplacement.mut_replace(SubsystemsPresetTargets.ELEVATOR_IDLE_DISPLACEMENT)
-
-            leadMotorController.linearSubsystemPositionDynamicRequest(
-                SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
-                SubsystemsPresetTargets.ELEVATOR_IDLE_DISPLACEMENT,
-                SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
-                Mechanical.SPROCKET,
-                Mechanical.REDUCTION,
-                Optional.of(SubsystemsMotionTargets.ELEVATOR_PRIMARY_MOTION_TARGETS),
-                Optional.empty(), Optional.empty()
-            )
-        }
-    }
-
-    override fun setElevatorHomeDisplacement(): Runnable {
-        return {
-            this.elevatorTargetDisplacement.mut_replace(SubsystemsPresetTargets.ELEVATOR_HOME_DISPLACEMENT)
-
-            leadMotorController.linearSubsystemPositionDynamicRequest(
-                SubsystemsControlRequests.ELEVATOR_CONTROL_TYPE,
-                SubsystemsPresetTargets.ELEVATOR_HOME_DISPLACEMENT,
-                SubsystemsMovementLimits.ELEVATOR_DISPLACEMENT_LIMITS,
-                Mechanical.SPROCKET,
-                Mechanical.REDUCTION,
-                Optional.of(SubsystemsMotionTargets.ELEVATOR_PRIMARY_MOTION_TARGETS),
-                Optional.empty(), Optional.empty()
-            )
-        }
-    }
-
     override fun stopElevator(): Runnable {
         return { leadMotorController.stopMotor() }
     }
