@@ -40,8 +40,8 @@ object ElevatorConstants {
      */
     object Identification {
         const val ELEVATOR_CANBUS_NAME: String = CanBuses.CANIVORE_CANBUS
-        const val LEAD_MOTOR_ID = 10
-        const val FOLLOWER_MOTOR_ID = 12
+        const val LEAD_MOTOR_ID = 30
+        const val FOLLOWER_MOTOR_ID = 31
     }
     /**
      * All constants that have physical contact with the elevator

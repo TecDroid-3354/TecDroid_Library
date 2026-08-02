@@ -1,10 +1,10 @@
-package frc.robot.utils.subsystemUtils.generic
+package frc.tecdroid3354.utils.subsystemUtils.generic
 
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.robot.utils.subsystemUtils.identification.GenericSysIdRoutine
+import frc.tecdroid3354.utils.subsystemUtils.identification.GenericSysIdRoutine
 
 abstract class SysIdSubsystem(name: String): SubsystemBase(name) {
     // SysId condition for running forwards

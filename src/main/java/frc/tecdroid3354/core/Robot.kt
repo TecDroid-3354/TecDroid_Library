@@ -5,6 +5,7 @@ import com.pathplanner.lib.commands.FollowPathCommand
 import com.pathplanner.lib.commands.PathfindingCommand
 import edu.wpi.first.net.WebServer
 import edu.wpi.first.wpilibj.Filesystem
+import edu.wpi.first.wpilibj.Threads
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import frc.tecdroid3354.constants.RobotConstants
@@ -12,6 +13,7 @@ import frc.tecdroid3354.constants.RobotMode.REAL
 import frc.tecdroid3354.constants.RobotMode.SIM
 import frc.tecdroid3354.constants.RobotMode.REPLAY
 import frc.tecdroid3354.constants.RobotTelemetry
+import org.ironmaple.simulation.SimulatedArena
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -29,40 +31,7 @@ object Robot : LoggedRobot() {
     private var autonomousCommand: Command? = null
 
     init {
-        // Record metadata
-        Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME)
-        Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE)
-        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA)
-        Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE)
-        Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH)
-        when (BuildConstants.DIRTY) {
-            0 -> Logger.recordMetadata("GitDirty", "All changes committed")
-            1 -> Logger.recordMetadata("GitDirty", "Uncomitted changes")
-            else -> Logger.recordMetadata("GitDirty", "Unknown")
-        }
-
-        // Set up data receivers & replay source
-        when (RobotConstants.ROBOT_MODE) {
-            REAL -> {
-                // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4Publisher())
-            }
-
-            SIM ->         // Running a physics simulator, log to NT
-                Logger.addDataReceiver(NT4Publisher())
-
-            REPLAY -> {
-                // Replaying a log, set up replay source
-                setUseTiming(false) // Run as fast as possible
-                val logPath = LogFileUtil.findReplayLog()
-                Logger.setReplaySource(WPILOGReader(logPath))
-                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
-            }
-        }
-
-        // Start AdvantageKit logger
-        Logger.start()
+        initLogging()
     }
 
     override fun robotInit() {
@@ -81,7 +50,8 @@ object Robot : LoggedRobot() {
     override fun robotPeriodic() {
         // Optionally switch the thread to high priority to improve loop
         // timing (see the template project documentation for details)
-        // Threads.setCurrentThreadPriority(true, 99);
+        // TODO(1): Comment this line if loop cycle is NOT significantly less than 20ms
+        Threads.setCurrentThreadPriority(true, 99);
 
         // Runs the Scheduler. This is responsible for polling buttons, adding
         // newly-scheduled commands, running already-scheduled commands, removing
@@ -91,15 +61,18 @@ object Robot : LoggedRobot() {
 
         CommandScheduler.getInstance().run()
 
+        // Updates the 2D and 3D (if applicable) visualization of all subsystems, except for chassis
         RobotContainer.robotVisualizer.updateRobotVisualization()
 
         // Return to non-RT thread priority (do not modify the first argument)
-        // Threads.setCurrentThreadPriority(false, 10);
+        // TODO(2): Same as TODO(1)
+        Threads.setCurrentThreadPriority(false, 10);
     }
 
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
         RobotContainer.robotDisabledConfig()
+        RobotContainer.resetSimulation()
     }
 
     /** This function is called periodically when disabled.  */
@@ -108,7 +81,6 @@ object Robot : LoggedRobot() {
     /** This autonomous runs the autonomous command selected by your [RobotContainer] class.  */
     override fun autonomousInit() {
         RobotContainer.robotEnabledConfig()
-        RobotContainer.robotAutoInitConfig()
         autonomousCommand = RobotContainer.getAutonomousCommand()
 
         // schedule the autonomous command (example)
@@ -150,5 +122,46 @@ object Robot : LoggedRobot() {
     override fun simulationInit() {}
 
     /** This function is called periodically whilst in simulation.  */
-    override fun simulationPeriodic() {}
+    override fun simulationPeriodic() {
+        // IMPORTANT: This method must be called ONLY in simulated robots, otherwise the roboRIO will SUFFER
+        RobotContainer.updateSimulation()
+    }
+
+    /** Merely records metadata, sets the [Logger] receriver / replay source and starts it. */
+    private fun initLogging() {
+        // Record metadata
+        Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME)
+        Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE)
+        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA)
+        Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE)
+        Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH)
+        when (BuildConstants.DIRTY) {
+            0 -> Logger.recordMetadata("GitDirty", "All changes committed")
+            1 -> Logger.recordMetadata("GitDirty", "Uncomitted changes")
+            else -> Logger.recordMetadata("GitDirty", "Unknown")
+        }
+
+        // Set up data receivers & replay source
+        when (RobotConstants.ROBOT_MODE) {
+            REAL -> {
+                // Running on a real robot, log to a USB stick ("/U/logs")
+                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4Publisher())
+            }
+
+            SIM ->         // Running a physics simulator, log to NT
+                Logger.addDataReceiver(NT4Publisher())
+
+            REPLAY -> {
+                // Replaying a log, set up replay source
+                setUseTiming(false) // Run as fast as possible
+                val logPath = LogFileUtil.findReplayLog()
+                Logger.setReplaySource(WPILOGReader(logPath))
+                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+            }
+        }
+
+        // Start AdvantageKit logger
+        Logger.start()
+    }
 }

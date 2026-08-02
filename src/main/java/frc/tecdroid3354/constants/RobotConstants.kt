@@ -4,9 +4,11 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
+import edu.wpi.first.units.measure.Mass
 import edu.wpi.first.units.measure.MomentOfInertia
 import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Time
+import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
@@ -14,8 +16,11 @@ import frc.tecdroid3354.utils.degrees
 import frc.tecdroid3354.utils.degreesCelsius
 import frc.tecdroid3354.utils.inches
 import frc.tecdroid3354.utils.kilogramSquareMeters
+import frc.tecdroid3354.utils.kilograms
 import frc.tecdroid3354.utils.meters
 import frc.tecdroid3354.utils.milliseconds
+import java.util.function.BooleanSupplier
+import kotlin.math.pow
 
 enum class RobotMode {
     REAL,
@@ -26,8 +31,21 @@ enum class RobotMode {
 object RobotConstants {
     val ROBOT_MODE                      : RobotMode = if (RobotBase.isReal()) RobotMode.REAL else RobotMode.SIM
     val LOOP_TIME                       : Time = 20.0.milliseconds
-    const val TUNING_MODE               : Boolean = true
+    val IS_RED_ALLIANCE                 : BooleanSupplier =
+        { DriverStation.getAlliance().isPresent && DriverStation.getAlliance().get() == DriverStation.Alliance.Red }
+
+    const val TUNING_MODE               : Boolean = true // Enables live tuning through Elastic.
     const val MAIN_CONTROLLER_PORT      : Int = 0
+}
+
+object RobotPhysics {
+    val RobotMass       : Mass              = 50.8.kilograms
+    val RobotLength     : Distance          = 26.5.inches
+    val RobotWidth      : Distance          = 26.5.inches
+    val RobotMOI        : MomentOfInertia   = ((1/12) * (RobotMass.kilograms) *
+            (RobotLength.meters.pow(2) + RobotWidth.meters.pow(2))).kilogramSquareMeters
+
+    const val WHEEL_COF : Double            = 1.2
 }
 
 /**

@@ -30,8 +30,8 @@ object FlywheelConstants {
      */
     object Identification {
         const val FLYWHEEL_CANBUS_NAME: String = CanBuses.RIO_CANBUS
-        const val LEAD_MOTOR_ID: Int = 0
-        const val FOLLOWER_MOTOR_ID: Int = 1
+        const val LEAD_MOTOR_ID: Int = 40
+        const val FOLLOWER_MOTOR_ID: Int = 41
     }
 
     /**

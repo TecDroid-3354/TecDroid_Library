@@ -1,4 +1,4 @@
-package frc.robot.utils.interpolation;
+package frc.tecdroid3354.utils.interpolation;
 
 /**
  * InverseInterpolable is an interface used by an Interpolating Tree as the Key type. Given two endpoint keys and a
