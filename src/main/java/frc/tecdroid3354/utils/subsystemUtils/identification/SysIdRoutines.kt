@@ -1,4 +1,4 @@
-package frc.robot.utils.subsystemUtils.identification
+package frc.tecdroid3354.utils.subsystemUtils.identification
 
 import com.ctre.phoenix6.SignalLogger
 import edu.wpi.first.units.Units.*
@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.RobotController
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.robot.utils.subsystemUtils.generic.SysIdSubsystem
+import frc.tecdroid3354.utils.subsystemUtils.generic.SysIdSubsystem
 import java.util.function.Consumer
 
 class SysIdRoutines(
