@@ -46,7 +46,7 @@ object FlywheelConstants {
         // From OnShape, accounting for the main roller and flywheel of Tutankabot as of 26/07/2026
         // Note that simulation will probably reach target slower than our 2026 robot, as that one
         // had 4 KrakenX60 dedicated to the flywheel, whereas this example assumes only 2.
-        private val MECHANISM_INERTIA: MomentOfInertia = (66.006.times(SimConstants.LB_SQUARED_IN_TO_KG_SQUARED_M)).kilogramSquareMeters
+        private val MECHANISM_INERTIA: MomentOfInertia = (66.006.times(SimConstants.FREEDOM_UNITS_TO_METRIC_MOI)).kilogramSquareMeters
 
         // From mechanism perspective
         // Check: https://www.motioncontroltips.com/how-do-gearmotors-impact-reflected-mass-inertia-from-the-load/

@@ -20,6 +20,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -37,6 +38,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.tecdroid3354.constants.SubsystemsControlGains;
 import frc.tecdroid3354.generated.SwerveTunerConstants;
 
 import java.util.Queue;
@@ -219,12 +221,22 @@ public class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void updateCurrentLimits(Current driveSupplyLimit, Current driveStatorLimit, Current turnSupplyLimit, Current turnStatorLimit) {
-        driveConfig.CurrentLimits.SupplyCurrentLimit = driveSupplyLimit.in(Amps);
-        driveConfig.CurrentLimits.StatorCurrentLimit = driveStatorLimit.in(Amps);
+    public void updateDriveMotorControlGains() {
+        driveConfig.Slot0 = SubsystemsControlGains.INSTANCE.getDRIVE_MOTOR_PRIMARY_GAINS().updatePhoenixSlot0Configs();
+        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+    }
 
-        turnConfig.CurrentLimits.SupplyCurrentLimit = turnSupplyLimit.in(Amps);
-        turnConfig.CurrentLimits.StatorCurrentLimit = turnStatorLimit.in(Amps);
+    @Override
+    public void updateSteerMotorControlGains() {
+        turnConfig.Slot0 = SubsystemsControlGains.INSTANCE.getSTEER_MOTOR_PRIMARY_GAINS().updatePhoenixSlot0Configs()
+                .withStaticFeedforwardSign(SwerveTunerConstants.STEER_FEEDFORWARD_SIGN_VALUE);
+        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+    }
+
+    @Override
+    public void updateCurrentLimits(CurrentLimitsConfigs driveLimits, CurrentLimitsConfigs steerLimits) {
+        driveConfig.CurrentLimits = driveLimits;
+        turnConfig.CurrentLimits = steerLimits;
 
         tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
         tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));

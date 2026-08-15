@@ -43,7 +43,7 @@ object JointConstants {
         const val NUMBER_OF_MOTORS: Int = 2
 
         // From OnShape, accounting for the elevator of Botzilla (2025) as of 26/07/2026
-        private val MECHANISM_INERTIA: MomentOfInertia = (1684.1562.times(SimConstants.LB_SQUARED_IN_TO_KG_SQUARED_M)).kilogramSquareMeters
+        private val MECHANISM_INERTIA: MomentOfInertia = (1684.1562.times(SimConstants.FREEDOM_UNITS_TO_METRIC_MOI)).kilogramSquareMeters
 
         // From mechanism perspective
         // Check: https://www.motioncontroltips.com/how-do-gearmotors-impact-reflected-mass-inertia-from-the-load/

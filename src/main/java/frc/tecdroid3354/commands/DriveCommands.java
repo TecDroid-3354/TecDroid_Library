@@ -16,25 +16,33 @@ package frc.tecdroid3354.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.tecdroid3354.constants.RobotConstants;
 import frc.tecdroid3354.subsystems.drive.Drive;
+import org.littletonrobotics.junction.Logger;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import static edu.wpi.first.units.Units.*;
+import static java.lang.Math.abs;
+import static java.lang.Math.atan2;
 
 public class DriveCommands {
     private static final double DEADBAND = 0.1;
@@ -47,12 +55,19 @@ public class DriveCommands {
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
+    private static final MutAngle lastDriveAngle = Degrees.mutable(0.0);
+
     private DriveCommands() {}
 
+    // --------------- --------- -------- ------- --------------- //
+    // --------------- AUXILIARY JOYSTICK METHODS --------------- //
+    // --------------- --------- -------- ------- --------------- //
+
+    /** Returns the magnitude of the joystick, accounting for its direction. Max drive velocity is not applied. */
     private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
         // Apply deadband
         double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
-        Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
+        Rotation2d linearDirection = new Rotation2d(atan2(y, x));
 
         // Square magnitude for more precise control
         linearMagnitude = linearMagnitude * linearMagnitude;
@@ -62,6 +77,107 @@ public class DriveCommands {
                 .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                 .getTranslation();
     }
+
+    /** Takes the (x,y) axes of a joystick and returns the angle it's pointing at for the robot, accounting for alliance.
+     * Make sure to pass the values without any pre-processing, conventions are handled in the method. */
+    public static Angle getAngleFromJoystick(double x, double y) {
+        if (abs(-y) < 0.3 && abs(x) < 0.3) return lastDriveAngle;
+
+        double atan2Rad = atan2( // Gets the "raw" angle from the joysticks
+                RobotConstants.INSTANCE.getIS_RED_ALLIANCE().getAsBoolean()
+                        ? -y
+                        : y,
+                RobotConstants.INSTANCE.getIS_RED_ALLIANCE().getAsBoolean()
+                        ? x
+                        : -x
+        ) + (Math.PI / 2); // Corrects due to joystick's own reference frame
+
+        lastDriveAngle.mut_replace(Radians.of(atan2Rad));
+
+        return lastDriveAngle;
+    }
+
+    /** Useful for the drive to remember the last rotation of an autonomous routine */
+    public static void overrideLastJoystickAngle(Rotation2d lastJoystickAngle) {
+        lastDriveAngle.mut_replace(lastJoystickAngle.getMeasure());
+    }
+
+    // --------------- --------- ------- ------- --------------- //
+    // --------------- AUXILIARY CHASSIS METHODS --------------- //
+    // --------------- --------- ------- ------- --------------- //
+
+    /** Constructs a vector from robot to target and returns its angle plus the headingOffset, if present.
+     * @param rememberTarget Set this to true if you'll command the drive with the resultant target, false otherwise */
+    public static Rotation2d getAngleFromRobotToTarget(Pose2d robotPose, Translation2d fieldToTarget,
+                                                       Optional<Rotation2d> headingOffset, boolean rememberTarget) {
+        Translation2d robotToTargetVector = fieldToTarget.minus(robotPose.getTranslation());
+
+        Rotation2d targetAngle = Rotation2d.fromRadians(
+          atan2(robotToTargetVector.getY(), robotToTargetVector.getX())
+        ).plus(headingOffset.orElse(new Rotation2d()));
+
+        if (rememberTarget) lastDriveAngle.mut_replace(targetAngle.getMeasure());
+
+        return targetAngle;
+    }
+
+    /** Creates a vector from robot to target and returns the projection of the velocity vector onto the distance unit vector
+     * <p>  - Positive result = Driving towards the target </p>
+     * <p>  - Negative result = Driving away from target </p>
+     * */
+    public static LinearVelocity getRobotRadialVelocity(ChassisSpeeds fieldRelativeSpeeds,
+                                                        Pose2d robotPose, Translation2d fieldToTarget) {
+        Translation2d robotToTargetVector = fieldToTarget.minus(robotPose.getTranslation());
+        double robotToTargetDistance = robotToTargetVector.getNorm();
+
+        // You're over the target, this would cause a division by zero
+        if (robotToTargetDistance <= 1e-5) return MetersPerSecond.zero();
+
+        Translation2d radialUnitVector = robotToTargetVector.div(robotToTargetDistance);
+
+        Translation2d velocityVector = new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
+        double radialVectorNorm = velocityVector.dot(radialUnitVector);
+
+        Translation2d radialVectorEnd = robotPose.getTranslation().plus(radialUnitVector.times(radialVectorNorm));
+
+        // Allows arrow-like visualization in AdvantageScope
+        Logger.recordOutput("Vector_Speeds/Radial", new Translation3d(robotPose.getX(), robotPose.getY(), 0.5),
+                new Translation3d(radialVectorEnd.getX(), radialVectorEnd.getY(), 0.5));
+
+        return MetersPerSecond.of(radialVectorNorm);
+    }
+
+    /** Rotates the robot -> target vector 90deg CCW and returns the projection of the velocity vector onto the tangential unit vector
+     * <p>  - Positive result = Orbiting the target Counter-Clockwise </p>
+     * <p>  - Negative result = Orbiting the target Clockwise </p>
+     * */
+    public static LinearVelocity getRobotTangentialVelocity(ChassisSpeeds fieldRelativeSpeeds,
+                                                            Pose2d robotPose, Translation2d fieldToTarget) {
+        Translation2d robotToTargetVector = fieldToTarget.minus(robotPose.getTranslation());
+        double robotToTargetDistance = robotToTargetVector.getNorm();
+
+        // You're over the target, this would cause a division by zero
+        if (robotToTargetDistance <= 1e-5) return MetersPerSecond.zero();
+
+        Translation2d radialUnitVector = robotToTargetVector.div(robotToTargetDistance);
+        // Rotates the distance unit vector 90deg Counter-Clockwise to get a unit vector perpendicular to the radius.
+        Translation2d tangentialUnitVector = radialUnitVector.rotateBy(Rotation2d.kCCW_90deg);
+
+        Translation2d velocityVector = new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
+        double tangentialVectorNorm = velocityVector.dot(tangentialUnitVector);
+
+        Translation2d tangentialVectorEnd = robotPose.getTranslation().plus(tangentialUnitVector.times(tangentialVectorNorm));
+
+        // Allows arrow-like visualization in AdvantageScope
+        Logger.recordOutput("Vector_Speeds/Tangential", new Translation3d(robotPose.getX(), robotPose.getY(), 0.5),
+                new Translation3d(tangentialVectorEnd.getX(), tangentialVectorEnd.getY(), 0.5));
+
+        return MetersPerSecond.of(tangentialVectorNorm);
+    }
+
+    // --------------- ----- -------- --------------- //
+    // --------------- DRIVE COMMANDS --------------- //
+    // --------------- ----- -------- --------------- //
 
     /** Field relative drive command using two joysticks (controlling linear and angular velocities). */
     public static Command joystickDrive(
@@ -134,6 +250,10 @@ public class DriveCommands {
                 // Reset PID controller when command starts
                 .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
     }
+
+    // --------------- ---------------- -------- --------------- //
+    // --------------- CHARACTERIZATION COMMANDS --------------- //
+    // --------------- ---------------- -------- --------------- //
 
     /**
      * Measures the velocity feedforward constants for the drive motors.
@@ -227,7 +347,7 @@ public class DriveCommands {
                         // Update gyro delta
                         Commands.run(() -> {
                                     var rotation = drive.getRotation();
-                                    state.gyroDelta += Math.abs(
+                                    state.gyroDelta += abs(
                                             rotation.minus(state.lastAngle).getRadians());
                                     state.lastAngle = rotation;
                                 })
@@ -237,7 +357,7 @@ public class DriveCommands {
                                     double[] positions = drive.getWheelRadiusCharacterizationPositions();
                                     double wheelDelta = 0.0;
                                     for (int i = 0; i < 4; i++) {
-                                        wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
+                                        wheelDelta += abs(positions[i] - state.positions[i]) / 4.0;
                                     }
                                     double wheelRadius = (state.gyroDelta * Drive.DRIVE_BASE_RADIUS) / wheelDelta;
 

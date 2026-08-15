@@ -1,7 +1,12 @@
 package frc.tecdroid3354
 
+import edu.wpi.first.math.geometry.Pose3d
+import edu.wpi.first.math.geometry.Rotation3d
+import edu.wpi.first.math.geometry.Transform3d
+import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
+import frc.tecdroid3354.constants.RobotConstants
 import frc.tecdroid3354.constants.RobotDimensions
 import frc.tecdroid3354.constants.RobotTelemetry
 import frc.tecdroid3354.constants.RobotVisualization
@@ -62,16 +67,47 @@ class RobotVisualizer(private val jointPosition: Supplier<Angle>,
     // VISUALIZATION IN 3D ONLY (requires 3D CAD asset configured in AdvantageScope)
     //
 
-    // TODO() Implement 3D Visualization
+    private val pivotOffset: Translation3d = Translation3d(
+        RobotDimensions.JOINT_FORWARD_OFFSET,
+        0.0.meters,
+        RobotDimensions.JOINT_UPWARD_OFFSET,
+    )
 
     /**
      * Updates the 2D and 3D (if applicable) visualizations of the robot through the supplied parameters
      * inside [RobotVisualizer]
      */
     fun updateRobotVisualization() {
+        // 2D UPDATE ONLY
         armGuidingRail.setAngle(jointPosition.get().degrees)
         armDisplacementLigament.setLength(elevatorDisplacement.get().meters)
 
+        // 3D UPDATE ONLY
+        // NOTE: for Botzilla, the pivot is a bit weirdly configured. For Tutankabot it doesn't work at all (different subsystems).
+        // This is just with the purpose of leaving a starting point for when you need to visualize a robot in its respective project.
+        // Just don't visualize the 2D / 3D components in AdvantageScope to see the full (stationary) robot.
+
+        // Pivot pose at the fixed chassis offset with the live joint pitch angle
+        val currentPivotPose = Pose3d(
+            Translation3d(),//pivotOffset,
+            Rotation3d(0.0.degrees, jointPosition.get().unaryMinus(), 0.0.degrees)
+        )
+
+        // Extend linearly along the local axis (Z-up or X-forward based on your CAD)
+        val calculatedArmPose = currentPivotPose.transformBy(
+            Transform3d(
+                Translation3d(elevatorDisplacement.get(), 0.0.meters, 0.0.meters),
+                Rotation3d() // Pure translation along local arm orientation
+            )
+        )
+
+        // Since this template does not contain the "wrist" subsystem, and that I don't want to fix this right now,
+        // this is horribly wrong.
+        val calculatedEndEffectorPose = calculatedArmPose
+
+        // Logging results
         Logger.recordOutput(RobotTelemetry.SUBSYSTEM_VISUALIZATION_2D_TAB, robot2d)
+        Logger.recordOutput(RobotTelemetry.SUBSYSTEM_VISUALIZATION_3D_TAB + "/Arm Pose", calculatedArmPose)
+        Logger.recordOutput(RobotTelemetry.SUBSYSTEM_VISUALIZATION_3D_TAB + "/End Effector Pose", calculatedEndEffectorPose)
     }
 }
