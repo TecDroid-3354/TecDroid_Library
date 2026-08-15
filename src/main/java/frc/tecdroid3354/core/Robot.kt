@@ -4,16 +4,20 @@ package frc.tecdroid3354.core
 import com.pathplanner.lib.commands.FollowPathCommand
 import com.pathplanner.lib.commands.PathfindingCommand
 import edu.wpi.first.net.WebServer
+import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.Threads
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
+import frc.tecdroid3354.constants.FieldConstants
 import frc.tecdroid3354.constants.RobotConstants
 import frc.tecdroid3354.constants.RobotMode.REAL
 import frc.tecdroid3354.constants.RobotMode.SIM
 import frc.tecdroid3354.constants.RobotMode.REPLAY
 import frc.tecdroid3354.constants.RobotTelemetry
 import org.ironmaple.simulation.SimulatedArena
+import org.ironmaple.simulation.gamepieces.GamePiece
+import org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -35,7 +39,13 @@ object Robot : LoggedRobot() {
     }
 
     override fun robotInit() {
-        // Warms up FollowPathCommand, as the first run a path might have significantly more delay than subsequent runs.
+        // For PathPlanner Auto Building to work with Named Commands. Must be called during robot init.
+        RobotContainer.registerNamedCommandsInit()
+
+        // Just silences the annoying joystick unplugged warning
+        DriverStation.silenceJoystickConnectionWarning(true)
+
+        // Warms up PathPlanner, as the first run a path might have significantly more delay than subsequent runs.
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand())
         CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand())
 
@@ -81,6 +91,7 @@ object Robot : LoggedRobot() {
     /** This autonomous runs the autonomous command selected by your [RobotContainer] class.  */
     override fun autonomousInit() {
         RobotContainer.robotEnabledConfig()
+        RobotContainer.robotAutonomousInitConfig()
         autonomousCommand = RobotContainer.getAutonomousCommand()
 
         // schedule the autonomous command (example)
@@ -119,7 +130,10 @@ object Robot : LoggedRobot() {
     override fun testPeriodic() {}
 
     /** This function is called once when the robot is first started up.  */
-    override fun simulationInit() {}
+    override fun simulationInit() {
+        // Prevents the field bumps from being treated as wall-obstacles, so that RobotBumpSim can work.
+        SimulatedArena.overrideInstance(RobotContainer.simField)
+    }
 
     /** This function is called periodically whilst in simulation.  */
     override fun simulationPeriodic() {
@@ -163,5 +177,9 @@ object Robot : LoggedRobot() {
 
         // Start AdvantageKit logger
         Logger.start()
+
+        // Due to Kotlin's lazy loading of objects, this needs to be referenced here for Boundary objects to call
+        // their init {} block, which logs the boundary box. This line does nothing else than loading the object into memory.
+        FieldConstants.BoundaryLimits
     }
 }

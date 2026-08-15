@@ -1,5 +1,7 @@
 package frc.tecdroid3354.constants
 
+import edu.wpi.first.math.geometry.Rotation3d
+import edu.wpi.first.math.geometry.Transform3d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.units.measure.Angle
@@ -20,7 +22,6 @@ import frc.tecdroid3354.utils.kilograms
 import frc.tecdroid3354.utils.meters
 import frc.tecdroid3354.utils.milliseconds
 import java.util.function.BooleanSupplier
-import kotlin.math.pow
 
 enum class RobotMode {
     REAL,
@@ -38,12 +39,18 @@ object RobotConstants {
     const val MAIN_CONTROLLER_PORT      : Int = 0
 }
 
+/** Contains robot-level values that affect movement calculations, such as mass, MOI and wheel cof */
 object RobotPhysics {
-    val RobotMass       : Mass              = 50.8.kilograms
-    val RobotLength     : Distance          = 26.5.inches
-    val RobotWidth      : Distance          = 26.5.inches
-    val RobotMOI        : MomentOfInertia   = ((1/12) * (RobotMass.kilograms) *
-            (RobotLength.meters.pow(2) + RobotWidth.meters.pow(2))).kilogramSquareMeters
+    val RobotMass       : Mass              = 52.896.kilograms
+    // Measured from Tutankabot's CAD as of 02/08/2026 -> Selected all Main Layout and picked Lzz MOI from Mass & Properties
+    // This gives around ~ 5.396 kg * m^2
+    val RobotMOI        : MomentOfInertia   = (18_440.2857 * SimConstants.FREEDOM_UNITS_TO_METRIC_MOI).kilogramSquareMeters
+
+    // This is an estimate that assumes the robot as a solid rectangular plate of uniformly-distributed mass.
+    // Since the robot tends to have non-uniformly distributed mass, this tends to be an underestimate.
+    // In this case, this gives around ~ 3.8 kg * m^2
+//    val RobotMOI        : MomentOfInertia   = ((1/12) * (RobotMass.kilograms) *
+//            (RobotLength.meters.pow(2) + RobotWidth.meters.pow(2))).kilogramSquareMeters
 
     const val WHEEL_COF : Double            = 1.2
 }
@@ -52,8 +59,8 @@ object RobotPhysics {
  * Contains all fixed dimensions of the robot that may be relevant. This includes measures relevant for simulation.
  */
 object RobotDimensions {
-    val BUMPERS_HEIGHT                  : Distance = 0.15.meters
-    val BUMPERS_DEPTH                   : Distance = 0.10.meters
+    val BUMPERS_HEIGHT                  : Distance = 5.0.inches
+    val BUMPERS_DEPTH                   : Distance = 2.5.inches
 
     val ROBOT_LENGTH                    : Distance = 26.5.inches.plus(BUMPERS_DEPTH)
     val ROBOT_WIDTH                     : Distance = 26.5.inches.plus(BUMPERS_DEPTH)
@@ -63,6 +70,8 @@ object RobotDimensions {
     val INTAKE_WIDTH                    : Distance = 26.5.inches
 
     val JOINT_WIDTH                     : Distance = 6.5.inches
+    val JOINT_FORWARD_OFFSET            : Distance = (-0.19685).meters
+    val JOINT_UPWARD_OFFSET             : Distance = 0.1048.meters
 
     val ELEVATOR_MINIMUM_LENGTH         : Distance = 0.8.meters     // Note that "length" differs from "displacement"
     val ELEVATOR_MAXIMUM_LENGTH         : Distance = 2.32.meters    // Minimum + Maximum displacement
@@ -75,7 +84,8 @@ object RobotDimensions {
  * i.e., Robot's transformation from center to a subsystem.
  */
 object RobotTransformations {
-    val ROBOT_TO_SHOOTER = Translation3d(0.25.meters, (-0.15).meters, 0.5.meters)
+    val ROBOT_TO_SHOOTER = Transform3d(0.0.meters, (-0.15).meters, 0.5.meters,
+        Rotation3d(0.0.degrees, 0.0.degrees, 180.0.degrees))
     val ROBOT_TO_INTAKE = Translation2d(0.0.meters, 0.25.meters)
 }
 
@@ -89,12 +99,13 @@ object CanBuses {
     const val CANIVORE_CANBUS    : String = "canivore"
 }
 
+/** Stores values that are only used for simulation */
 object SimConstants {
     val NEUTRAL_MOTOR_TEMPERATURE: Temperature = 45.0.degreesCelsius
 
     // Based off Falcon 500, which should be fairly similar to Kraken x60 MOI
-    val ESTIMATED_MOTOR_MOI         : MomentOfInertia = (3.6e-5).kilogramSquareMeters
-    const val LB_SQUARED_IN_TO_KG_SQUARED_M: Double = 0.00029263965
+    val ESTIMATED_MOTOR_MOI                     : MomentOfInertia = (3.6e-5).kilogramSquareMeters
+    const val FREEDOM_UNITS_TO_METRIC_MOI       : Double = 0.00029263965
 }
 
 /**

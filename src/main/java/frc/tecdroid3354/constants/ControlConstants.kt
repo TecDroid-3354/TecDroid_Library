@@ -1,14 +1,15 @@
 package frc.tecdroid3354.constants
 
+import com.pathplanner.lib.config.PIDConstants
+import com.pathplanner.lib.controllers.PPHolonomicDriveController
 import edu.wpi.first.units.AngleUnit
 import edu.wpi.first.units.AngularVelocityUnit
 import edu.wpi.first.units.DistanceUnit
-import edu.wpi.first.units.Units.DegreesPerSecond
-import edu.wpi.first.units.Units.MetersPerSecond
 import edu.wpi.first.units.Units.Seconds
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
+import frc.tecdroid3354.generated.SwerveTunerConstants
 import frc.tecdroid3354.subsystems.angularPosition.JointConstants
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelConstants
 import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants
@@ -28,6 +29,23 @@ import frc.tecdroid3354.utils.radiansPerSecond
 import frc.tecdroid3354.utils.rotationsPerMinute
 import frc.tecdroid3354.utils.safety.MeasureLimits
 import frc.tecdroid3354.utils.seconds
+
+/** Meant for the [edu.wpi.first.wpilibj2.command.button.CommandXboxController] of the driver */
+object DriveMultipliers {
+    const val CONTROLLER_PRIMARY_X_MULTIPLIER       : Double = 0.8
+    const val CONTROLLER_PRIMARY_Y_MULTIPLIER       : Double = 0.8
+    const val CONTROLLER_PRIMARY_THETA_MULTIPLIER   : Double = 0.6 // Only in case of continuous rotation
+}
+
+/**
+ * Stores an Enum value with the Control Request Type used for each subsystem.
+ * The corresponding value must be called inside the subsystem's hardware layer when commanding the motor(s) to move.
+ */
+object SubsystemsControlRequests {
+    val FLYWHEEL_CONTROL_TYPE   : OpVelocityControlRequests = VELOCITY_TORQUE
+    val JOINT_CONTROL_TYPE      : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
+    val ELEVATOR_CONTROL_TYPE   : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
+}
 
 /**
  * Each subsystem set of [frc.tecdroid3354.utils.safety.MeasureLimits]. Naming must be as follows:
@@ -53,16 +71,7 @@ object SubsystemsMovementLimits {
         MeasureLimits(0.0.inches .. 52.0.inches)
 }
 
-/**
- * Stores an Enum value with the Control Request Type used for each subsystem.
- * The corresponding value must be called inside the subsystem's hardware layer when commanding the motor(s) to move.
- */
-object SubsystemsControlRequests {
-    val FLYWHEEL_CONTROL_TYPE   : OpVelocityControlRequests = VELOCITY_TORQUE
-    val JOINT_CONTROL_TYPE      : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
-    val ELEVATOR_CONTROL_TYPE   : OpPositionControlRequests = POSITION_DYNAMIC_TORQUE
-}
-
+/** For all known targets of each subsystem */
 object SubsystemsPresetTargets {
     //
     // FLYWHEEL ONLY
@@ -120,19 +129,36 @@ object SubsystemsControlGains {
     //
     // FLYWHEEL ONLY
     //
-     val FLYWHEEL_MOTOR_PRIMARY_GAINS: TunableControlGains = TunableControlGains(FlywheelConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
+     val FLYWHEEL_MOTOR_PRIMARY_GAINS   : TunableControlGains = TunableControlGains(FlywheelConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
         kP = 10.0, kI = 0.0, kD = 0.0, kS = 0.0, kV = 0.0, kA = 0.0, kG = 0.0) // "Tuned" in SIMULATION -> Torque Request (Probably wrong MOI)
-     val FLYWHEEL_MOTOR_SECONDARY_GAINS: TunableControlGains = TunableControlGains(FlywheelConstants.Telemetry.SUBSYSTEM_SECONDARY_GAINS,
+     val FLYWHEEL_MOTOR_SECONDARY_GAINS : TunableControlGains = TunableControlGains(FlywheelConstants.Telemetry.SUBSYSTEM_SECONDARY_GAINS,
          kP = 0.5, kI = 0.0, kD = 0.0, kS = 0.0, kV = 0.0, kA = 0.0, kG = 0.0) // Not Tuned
-
-     val JOINT_MOTOR_PRIMARY_GAINS: TunableControlGains = TunableControlGains(JointConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
-         kP = 87.5, kI = 0.0, kD = 12.5, kS = 61.0, kV = 0.0, kA = 0.0, kG = 189.0) // Tuned in SIMULATION -> Torque Request
 
      //
      // ELEVATOR ONLY
      //
-     val ELEVATOR_MOTOR_PRIMARY_GAINS: TunableControlGains = TunableControlGains(ElevatorConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
+     val ELEVATOR_MOTOR_PRIMARY_GAINS   : TunableControlGains = TunableControlGains(ElevatorConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
         kP = 450.0, kI = 0.0, kD = 10.0, kS = 0.0, kV = 0.0, kA = 0.75, kG = 6.52) // Tuned in SIMULATION -> Torque Request.
+
+     //
+     // JOINT ONLY
+     //
+     val JOINT_MOTOR_PRIMARY_GAINS      : TunableControlGains = TunableControlGains(JointConstants.Telemetry.SUBSYSTEM_PRIMARY_GAINS,
+         kP = 87.5, kI = 0.0, kD = 12.5, kS = 61.0, kV = 0.0, kA = 0.0, kG = 189.0) // Tuned in SIMULATION -> Torque Request
+
+     //
+     // DRIVE ONLY
+     //
+     val CHASSIS_AUTONOMOUS_CONTROLLER    : PPHolonomicDriveController = PPHolonomicDriveController(
+         PIDConstants(6.0, 0.0, 0.0),   // Translational PID
+         PIDConstants(10.0, 0.0, 0.0)    // Rotational PID
+     ) // Note that this is not live-tunable because PathPlanner creates an immutable PID object with the first configuration.
+
+     // Note that these values cannot be accurately tuned in simulation, unlike the autonomous controller.
+     val DRIVE_MOTOR_PRIMARY_GAINS        : TunableControlGains = TunableControlGains(SwerveTunerConstants.SUBSYSTEM_DRIVE_PRIMARY_GAINS,
+         kP = 0.8, kI = 0.0, kD = 0.0, kS = 0.0, kV = 0.124, kA = 0.0, kG = 0.0)    // TODO() = Tune for Torque in REAL robot
+     val STEER_MOTOR_PRIMARY_GAINS        : TunableControlGains = TunableControlGains(SwerveTunerConstants.SUBSYSTEM_STEER_PRIMARY_GAINS,
+         kP = 100.0, kI = 0.0, kD = 0.5, kS = 0.1, kV = 2.49, kA = 0.0, kG = 0.0)   // TODO() = Tune for Torque in REAL robot
 }
 
 /**
@@ -165,7 +191,7 @@ object SubsystemsMotionTargets {
 
     val JOINT_SECONDARY_MOTION_TARGETS: AngularMotionTargets =
         AngularMotionTargets( // Half the cruise velocity of Primary Targets
-            Math.PI.div(4).radiansPerSecond,
+            Math.PI.div(2).radiansPerSecond, // Same as Primary for testing in simulation
             0.1.seconds,
             0.1.seconds
         )

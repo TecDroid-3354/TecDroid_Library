@@ -16,11 +16,10 @@ package frc.tecdroid3354.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
@@ -28,10 +27,7 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -49,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.tecdroid3354.constants.RobotConstants;
 import frc.tecdroid3354.constants.RobotMode;
 import frc.tecdroid3354.constants.RobotPhysics;
+import frc.tecdroid3354.constants.SubsystemsControlGains;
 import frc.tecdroid3354.generated.SwerveTunerConstants;
 import frc.tecdroid3354.subsystems.vision.Vision;
 import frc.tecdroid3354.utils.LocalADStarAK;
@@ -152,13 +149,14 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         AutoBuilder.configure(
                 this::getPose,
                 this::resetOdometry,
-                this::getChassisSpeeds,
+                this::getRobotRelativeChassisSpeeds,
                 this::runVelocity,
-                new PPHolonomicDriveController(new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+                SubsystemsControlGains.INSTANCE.getCHASSIS_AUTONOMOUS_CONTROLLER(),
                 PP_CONFIG,
                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 this);
         Pathfinding.setPathfinder(new LocalADStarAK());
+        // Binds PathPlannerLogging to AdvantageKit
         PathPlannerLogging.setLogActivePathCallback((activePath) -> {
             Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
         });
@@ -227,6 +225,37 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected && RobotConstants.INSTANCE.getROBOT_MODE() != RobotMode.SIM);
+
+        // Update Motor Control Gains
+        if (SubsystemsControlGains.INSTANCE.getDRIVE_MOTOR_PRIMARY_GAINS().hadTunableUpdated()) {
+            updateDriveMotorControlGains();
+        }
+
+        if (SubsystemsControlGains.INSTANCE.getSTEER_MOTOR_PRIMARY_GAINS().hadTunableUpdated()) {
+            updateSteerMotorControlGains();
+        }
+    }
+
+    /** Takes the drive control gains stored in {@link SubsystemsControlGains} and updates them in each module */
+    private void updateDriveMotorControlGains() {
+        for (int i = 0; i < 4; i++) {
+            modules[i].updateDriveMotorControlGains();
+        }
+    }
+
+    /** Takes the steer control gains stored in {@link SubsystemsControlGains} and updates them in each module.
+     * It also applies the static feedforward sign value stored in {@link SwerveTunerConstants} */
+    private void updateSteerMotorControlGains() {
+        for (int i = 0; i < 4; i++) {
+            modules[i].updateSteerMotorControlGains();
+        }
+    }
+
+    /** Updates the current limits in all modules. Not intended for live tuning, values are stored in {@link SwerveTunerConstants} */
+    public void updateCurrentLimits(CurrentLimitsConfigs driveLimits, CurrentLimitsConfigs steerLimits) {
+        for (int i = 0; i < 4; i++) {
+            modules[i].updateCurrentLimits(driveLimits, steerLimits);
+        }
     }
 
     /**
@@ -308,9 +337,22 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     }
 
     /** Returns the measured chassis speeds of the robot. */
-    @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-    private ChassisSpeeds getChassisSpeeds() {
+    @AutoLogOutput(key = "SwerveChassisSpeeds/Measured_Robot_Relative")
+    public ChassisSpeeds getRobotRelativeChassisSpeeds() {
         return kinematics.toChassisSpeeds(getModuleStates());
+    }
+
+    /** Returns the measured chassis speeds of the robot, converted to field-frame of reference. The vector is logged. */
+    @AutoLogOutput(key = "SwerveChassisSpeeds/Measured_Field_Relative")
+    public ChassisSpeeds getFieldRelativeChassisSpeeds() {
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeChassisSpeeds(), getRotation());
+        Translation2d velocityVector = new Translation2d(fieldRelativeSpeeds.vxMetersPerSecond, fieldRelativeSpeeds.vyMetersPerSecond);
+        Translation2d velocityVectorEnd = getPose().getTranslation().plus(velocityVector);
+
+        Logger.recordOutput("Vector_Speeds/Field_Speed",
+                new Translation3d(getPose().getX(), getPose().getY(), 0.5),
+                new Translation3d(velocityVectorEnd.getX(), velocityVectorEnd.getY(), 0.5));
+        return fieldRelativeSpeeds;
     }
 
     /** Returns the position of each module in radians. */

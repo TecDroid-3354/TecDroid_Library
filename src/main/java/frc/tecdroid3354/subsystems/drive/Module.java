@@ -13,14 +13,18 @@
 
 package frc.tecdroid3354.subsystems.drive;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.Optional;
 
 public class Module {
     private final ModuleIO io;
@@ -62,6 +66,18 @@ public class Module {
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);
         turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+    }
+
+    public void updateDriveMotorControlGains() {
+        io.updateDriveMotorControlGains();
+    }
+
+    public void updateSteerMotorControlGains() {
+        io.updateSteerMotorControlGains();
+    }
+
+    public void updateCurrentLimits(CurrentLimitsConfigs driveLimits, CurrentLimitsConfigs steerLimits) {
+        io.updateCurrentLimits(driveLimits, steerLimits);
     }
 
     /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */

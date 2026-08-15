@@ -15,7 +15,6 @@ package frc.tecdroid3354.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
@@ -24,23 +23,28 @@ public class VisionConstants {
     public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
     // Camera names, must match names configured on coprocessor
-    public static String camera0Name = "limelight-left";
-    public static String camera1Name = "limelight-right";
-    public static String camera2Name = "limelight-back";
+    public static String leftCameraName = "limelight-left";
+    public static String rightCameraName = "limelight-right";
+    public static String backCameraName = "limelight-back";
 
     // Robot to camera transforms
     // For limelight, you need to configure this in the Web UI (used in real robot) and here (used in simulation)
-    public static Transform3d robotToCamera0 = new Transform3d(-0.322263, -0.041275, 0.157163,
+
+    // Translation Components
+    // x: LL Forward
+    // y: LL Right
+    // z: LL Up
+    public static Transform3d robotToLeftCamera = new Transform3d(-0.041275, -0.322263, 0.157163,
             new Rotation3d(Math.toRadians(0.0), Math.toRadians(17.0), Math.toRadians(90.0)));
 
-    public static Transform3d robotToCamera1 = new Transform3d(0.322263, -0.041275, 0.157163,
+    public static Transform3d robotToRightCamera = new Transform3d(-0.041275, 0.322263, 0.157163,
             new Rotation3d(Math.toRadians(0.0), Math.toRadians(17.0), -Math.toRadians(90.0)));
 
-    public static Transform3d robotToCamera2 = new Transform3d(0.0, 0.0, 0.4572,
+    public static Transform3d robotToBackCamera = new Transform3d(-0.3175, 0.0, 0.4572,
             new Rotation3d(Math.toRadians(0.0), Math.toRadians(20.0), Math.toRadians(180.0)));
 
     // Basic filtering thresholds
-    public static double maxAmbiguity = 0.3;
+    public static double maxAmbiguity = 0.18;
     public static double maxZError = 0.75;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag

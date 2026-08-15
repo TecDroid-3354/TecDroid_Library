@@ -13,6 +13,7 @@
 
 package frc.tecdroid3354.subsystems.drive;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Current;
 import org.littletonrobotics.junction.AutoLog;
@@ -42,8 +43,14 @@ public interface ModuleIO {
     /** Updates the set of loggable inputs. */
     public default void updateInputs(ModuleIOInputs inputs) {}
 
+    /** Updates the {@link com.ctre.phoenix6.configs.Slot0Configs} of the drive motor */
+    public default void updateDriveMotorControlGains() {}
+
+    /** Updates the {@link com.ctre.phoenix6.configs.Slot0Configs} of the steer motor */
+    public default void updateSteerMotorControlGains() {}
+
     /** Updates the current limits of both drive and turn motors. */
-    public default void updateCurrentLimits(Current driveSupplyLimit, Current driveStatorLimit, Current turnSupplyLimit, Current turnStatorLimit) {}
+    public default void updateCurrentLimits(CurrentLimitsConfigs driveLimits, CurrentLimitsConfigs steerLimits) {}
 
     /** Run the drive motor at the specified open loop value. */
     public default void setDriveOpenLoop(double output) {}
