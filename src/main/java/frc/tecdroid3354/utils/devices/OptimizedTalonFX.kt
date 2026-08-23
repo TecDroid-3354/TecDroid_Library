@@ -28,11 +28,15 @@ import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Velocity
 import edu.wpi.first.units.measure.Voltage
+import frc.tecdroid3354.constants.RobotConstants
+import frc.tecdroid3354.constants.RobotMode
 import frc.tecdroid3354.utils.Sprocket
 import frc.tecdroid3354.utils.controlProfiles.AngularMotionTargets
 import frc.tecdroid3354.utils.controlProfiles.LinearMotionTargets
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.hertz
 import frc.tecdroid3354.utils.mechanical.Reduction
+import frc.tecdroid3354.utils.rotations
 import frc.tecdroid3354.utils.rotationsPerSecond
 import frc.tecdroid3354.utils.rotationsPerSecondCubed
 import frc.tecdroid3354.utils.rotationsPerSecondSquared
@@ -78,7 +82,7 @@ private val REQUIRED_PARAMETERS_NOT_MET =
  * This class also optimizes canbus utilization by only keeping relevant signals active. Motor configuration
  * and follower requests methods are also included.
  */
-class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
+class OpTalonFX(private val id: Int, private val canBusName: String = "rio"): MotorIO {
     private val motor = KrakenMotors.createDefaultTalon(id ,canBusName)
     private var isFollower: Boolean = false
 
@@ -107,6 +111,22 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
         optimizeMotorCan() // This method should not be called anywhere else.
     }
 
+    override fun updateInputs(inputs: MotorIO.MotorIOInputs) {
+        inputs.isConnected = getIsConnected()
+
+        inputs.closedLoopReference.mut_replace(getClosedLoopTargetPosition())
+        inputs.closedLoopReferenceSlope.mut_replace(getClosedLoopTargetVelocity())
+
+        inputs.currentPosition.mut_replace(getPosition())
+        inputs.currentVelocity.mut_replace(getVelocity())
+        inputs.currentAcceleration.mut_replace(getAcceleration())
+
+        inputs.currentTemperature.mut_replace(getTemperature())
+        inputs.outputVoltage.mut_replace(getOutputVoltage())
+        inputs.supplyCurrent.mut_replace(getSupplyCurrent())
+        inputs.torqueCurrent.mut_replace(getTorqueCurrent())
+    }
+
     //
     // Getters for relevant signals
     //
@@ -118,7 +138,13 @@ class OpTalonFX(private val id: Int, private val canBusName: String = "rio") {
     fun getSupplyCurrent(): Current { return motor.supplyCurrent.value }
     fun getTorqueCurrent(): Current { return motor.torqueCurrent.value }
     fun getPower(): Double { return motor.get() }
-    fun getIsConnected(): Boolean { return motor.isConnected }
+    fun getIsConnected(): Boolean { return if(RobotConstants.ROBOT_MODE == RobotMode.SIM) true else motor.isConnected }
+
+    //
+    // Closed Loop References (motor internally-calculated target position and velocity)
+    //
+    fun getClosedLoopTargetPosition(): Angle { return motor.closedLoopReference.value.rotations }
+    fun getClosedLoopTargetVelocity(): AngularVelocity { return motor.closedLoopReferenceSlope.value.rotationsPerSecond }
 
     /**
      * Non-MotionMagic request. Uses [VoltageOut]; intended only for Sys-Id usage.

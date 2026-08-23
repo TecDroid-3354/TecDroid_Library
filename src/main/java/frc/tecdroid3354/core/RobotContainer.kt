@@ -61,17 +61,17 @@ object RobotContainer
 
     private lateinit var drive                  : Drive
     private lateinit var mapleSimDrive          : SwerveDriveSimulation
+    private lateinit var physicsBumpSim         : RobotBumpSim
+    // The 'false' parameter prevents field bumps from being treated as obstacles (for RobotBumpSim to work)
+    val simField                                : SimulatedArena = Arena2026Rebuilt(false)
+
     private lateinit var vision                 : Vision
 
     private lateinit var jointSubsystem         : JointSubsystem
     private lateinit var elevatorSubsystem      : ElevatorSubsystem
     private lateinit var flywheelSubsystem      : FlywheelSubsystem
 
-    private lateinit var physicsBumpSim         : RobotBumpSim
-
     lateinit var robotVisualizer                : RobotVisualizer
-    // The 'false' parameter prevents field bumps from being treated as obstacles (for RobotBumpSim to work)
-    val simField                                : SimulatedArena = Arena2026Rebuilt(false)
 
     /** Makes sure everything is initialized and configured */
     init
@@ -178,7 +178,7 @@ object RobotContainer
     /** Updates [simField] and [mapleSimDrive], taking [physicsBumpSim] into account. Poses logged with [Logger] */
     fun updateSimulation() {
         if (RobotConstants.ROBOT_MODE != RobotMode.SIM) return
-        simField.simulationPeriodic()
+        simField.simulationPeriodic() // Must be called first
 
         // Physics update accounting for bump (must call after maple sim updates)
         val robotPose2d = mapleSimDrive.simulatedDriveTrainPose
@@ -191,6 +191,7 @@ object RobotContainer
             mapleSimDrive.setSimulationWorldPose(physicsBumpSim.getSimWorldPose(robotPose2d))
         }
 
+        // Log the robot and game pieces
         Logger.recordOutput("FieldSimulation/RobotPosition2d", mapleSimDrive.simulatedDriveTrainPose)
         Logger.recordOutput("FieldSimulation/RobotPosition3d", robotPose3d) // View this one in AdvantageScope
         Logger.recordOutput(

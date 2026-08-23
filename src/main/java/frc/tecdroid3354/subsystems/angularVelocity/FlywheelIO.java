@@ -1,6 +1,7 @@
 package frc.tecdroid3354.subsystems.angularVelocity;
 
 import edu.wpi.first.units.measure.*;
+import frc.tecdroid3354.utils.interfaces.MotorIO;
 import org.littletonrobotics.junction.AutoLog;
 
 import static edu.wpi.first.units.Units.*;
@@ -49,24 +50,6 @@ public interface FlywheelIO {
         public MutAngularVelocity flywheelTargetVelocity = DegreesPerSecond.mutable(0.0);
         public MutAngularVelocity flywheelManualTargetVelocity = DegreesPerSecond.mutable(0.0);
         public MutAngularVelocity flywheelPresetVelocity = DegreesPerSecond.mutable(0.0); // If applicable
-
-        /** Lead motor wise fields */
-        public boolean isLeadMotorConnected = false;
-        public MutAngularVelocity leadMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutAngularAcceleration leadMotorAcceleration = DegreesPerSecondPerSecond.mutable(0.0);
-        public MutTemperature leadMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage leadMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent leadMotorSupplyCurrent = Amps.mutable(0.0);  // Current supplied from battery
-        public MutCurrent leadMotorTorqueCurrent = Amps.mutable(0.0);  // Reflects the physical load
-
-        /** Follower motor wise fields (duplicate for number of followers, or delete if not applicable) */
-        public boolean isFollowerMotorConnected = false;
-        public MutAngularVelocity followerMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutAngularAcceleration followerMotorAcceleration = DegreesPerSecondPerSecond.mutable(0.0);
-        public MutTemperature followerMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage followerMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent followerMotorSupplyCurrent = Amps.mutable(0.0);   // Current supplied from battery
-        public MutCurrent followerMotorTorqueCurrent = Amps.mutable(0.0);   // Reflects the physical load
     }
 
     /**
@@ -74,7 +57,8 @@ public interface FlywheelIO {
      * Might change depending on the implementation (i.e. simulation does not need to check motors' connectivity).
      * @param inputs The generated {@link FlywheelIOInputs} object keeping track of everything.
      */
-    void updateFlywheelInputs(FlywheelIOInputs inputs);
+    void updateFlywheelInputs(FlywheelIOInputs inputs,
+                              MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs);
 
     /**
      * Used to update the in-file variable containing the manual target velocity. This resets with every code reload.
@@ -154,7 +138,8 @@ public interface FlywheelIO {
     class DummyFlywheelIO implements FlywheelIO {
 
         @Override
-        public void updateFlywheelInputs(FlywheelIOInputs inputs) {
+        public void updateFlywheelInputs(FlywheelIOInputs inputs,
+                                         MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs) {
 
         }
 

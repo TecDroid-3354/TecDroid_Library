@@ -10,6 +10,7 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
+import frc.tecdroid3354.utils.devices.MotorIOs.MotorIOInputsAutoLogged
 import frc.tecdroid3354.utils.inches
 import org.littletonrobotics.junction.Logger
 import java.util.function.Supplier
@@ -25,6 +26,8 @@ class ElevatorSubsystem(private val io: ElevatorIO): SubsystemBase(ElevatorConst
      * [ElevatorIO] without modifying this class.
      */
     private val inputs: ElevatorIOInputsAutoLogged = ElevatorIOInputsAutoLogged()
+    private val leadMotorInputs: MotorIOInputsAutoLogged = MotorIOInputsAutoLogged()
+    private val followerMotorInputs: MotorIOInputsAutoLogged = MotorIOInputsAutoLogged()
 
     /**
      * Alerts to inform driver / developers something went wrong
@@ -45,14 +48,16 @@ class ElevatorSubsystem(private val io: ElevatorIO): SubsystemBase(ElevatorConst
      * Called every 20ms. Updates every input according to the I/O implementation and logs it.
      */
     override fun periodic() {
-        io.updateElevatorInputs(inputs)
+        io.updateElevatorInputs(inputs, leadMotorInputs, followerMotorInputs)
         // Make sure is AdvantageKit's Logger (org.littletonrobotics.junction) and not Java's.
         Logger.processInputs(ElevatorConstants.Telemetry.SUBSYSTEM_TAB, inputs)
+        Logger.processInputs(ElevatorConstants.Telemetry.LEAD_MOTOR_INPUTS_TAB, leadMotorInputs)
+        Logger.processInputs(ElevatorConstants.Telemetry.FOLLOWER_MOTOR_INPUTS_TAB, followerMotorInputs)
 
         // Updates each alert based on the retrieved connectivity status of this cycle.
         // alert = notConnected ? true : false
-        leadMotorDisconnectedAlert.set(inputs.isLeadMotorConnected.not())
-        followerMotorDisconnectedAlert.set(inputs.isFollowerMotorConnected.not())
+        leadMotorDisconnectedAlert.set(leadMotorInputs.isConnected.not())
+        followerMotorDisconnectedAlert.set(followerMotorInputs.isConnected.not())
 
         if (SubsystemsControlGains.ELEVATOR_MOTOR_PRIMARY_GAINS.hadTunableUpdated()) {
             io.updateElevatorMotorsControlGains(0) // Updates slot0 because is the primary set

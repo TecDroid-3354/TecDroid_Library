@@ -4,11 +4,11 @@ import edu.wpi.first.math.MathUtil
 import edu.wpi.first.units.Units.DegreesPerSecond
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.MutAngularVelocity
-import edu.wpi.first.units.measure.Voltage
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.devices.OpTalonFX
 
 /**
@@ -33,8 +33,8 @@ class FlywheelIOTalonFX: FlywheelIO {
     private val manualFlywheelVelocityTarget: MutAngularVelocity = DegreesPerSecond.mutable(0.0)
     private val flywheelVelocityTarget: MutAngularVelocity = DegreesPerSecond.mutable(0.0)
 
-    @Suppress("DuplicatedCode")
-    override fun updateFlywheelInputs(inputs: FlywheelIO.FlywheelIOInputs) {
+    override fun updateFlywheelInputs(inputs: FlywheelIO.FlywheelIOInputs,
+                                      leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs) {
         inputs.flywheelActualVelocity.mut_replace(leadMotorController.getMotorToAngularSubsystemVelocity(
             FlywheelConstants.Mechanical.REDUCTION
         ))
@@ -42,21 +42,8 @@ class FlywheelIOTalonFX: FlywheelIO {
         inputs.flywheelManualTargetVelocity.mut_replace(manualFlywheelVelocityTarget)
         inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM)
 
-        inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
-        inputs.leadMotorVelocity.mut_replace(leadMotorController.getVelocity())
-        inputs.leadMotorAcceleration.mut_replace(leadMotorController.getAcceleration())
-        inputs.leadMotorTemperature.mut_replace(leadMotorController.getTemperature())
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorController.getOutputVoltage())
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorController.getSupplyCurrent())
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorController.getTorqueCurrent())
-
-        inputs.isFollowerMotorConnected = followerMotorController.getIsConnected()
-        inputs.followerMotorVelocity.mut_replace(followerMotorController.getVelocity())
-        inputs.followerMotorAcceleration.mut_replace(followerMotorController.getAcceleration())
-        inputs.followerMotorTemperature.mut_replace(followerMotorController.getTemperature())
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorController.getOutputVoltage())
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorController.getSupplyCurrent())
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorController.getTorqueCurrent())
+        leadMotorController.updateInputs(leadMotorInputs)
+        followerMotorController.updateInputs(followerMotorInputs)
     }
 
     override fun updateFlywheelManualVelocity(newFlywheelManualVelocity: AngularVelocity) {

@@ -8,10 +8,10 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
-import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants.Identification
 import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants.Mechanical
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import java.util.Optional
 
 /**
@@ -31,29 +31,16 @@ class ElevatorIOTalonFX : ElevatorIO {
     private val elevatorTargetDisplacement : MutDistance = Meters.mutable(0.0)
     private val elevatorManualTargetDisplacement: MutDistance = Meters.mutable(0.0)
 
-    @Suppress("DuplicatedCode")
-    override fun updateElevatorInputs(inputs: ElevatorIO.ElevatorIOInputs) {
+    override fun updateElevatorInputs(inputs: ElevatorIO.ElevatorIOInputs,
+                                      leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs) {
         inputs.elevatorDisplacement.mut_replace(leadMotorController.getMotorToLinearSubsystemDisplacement(
             Mechanical.REDUCTION, Mechanical.SPROCKET
         ))
         inputs.elevatorTargetDisplacement.mut_replace(elevatorTargetDisplacement)
         inputs.elevatorManualTargetDisplacement.mut_replace(elevatorManualTargetDisplacement)
 
-        inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
-        inputs.leadMotorPosition.mut_replace(leadMotorController.getPosition())
-        inputs.leadMotorVelocity.mut_replace(leadMotorController.getVelocity())
-        inputs.leadMotorTemperature.mut_replace(leadMotorController.getTemperature())
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorController.getOutputVoltage())
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorController.getSupplyCurrent())
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorController.getTorqueCurrent())
-
-        inputs.isFollowerMotorConnected = followerMotorController.getIsConnected()
-        inputs.followerMotorPosition.mut_replace(followerMotorController.getPosition())
-        inputs.followerMotorVelocity.mut_replace(followerMotorController.getVelocity())
-        inputs.followerMotorTemperature.mut_replace(followerMotorController.getTemperature())
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorController.getOutputVoltage())
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorController.getSupplyCurrent())
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorController.getTorqueCurrent())
+        leadMotorController.updateInputs(leadMotorInputs)
+        followerMotorController.updateInputs(followerMotorInputs)
     }
 
     override fun updateElevatorManualDisplacement(newElevatorManualDisplacement: Distance) {

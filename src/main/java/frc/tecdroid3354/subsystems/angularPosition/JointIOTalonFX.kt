@@ -8,6 +8,7 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import java.util.Optional
 
@@ -22,29 +23,16 @@ class JointIOTalonFX: JointIO {
     private val jointTargetPosition: MutAngle = Degrees.mutable(0.0)
     private val jointManualTargetPosition: MutAngle = Degrees.mutable(0.0)
 
-    @Suppress("DuplicatedCode")
-    override fun updateJointInputs(inputs: JointIO.JointIOInputs) {
+    override fun updateJointInputs(inputs: JointIO.JointIOInputs,
+                                   leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs) {
         inputs.jointActualPosition.mut_replace(leadMotorController.getMotorToAngularSubsystemPosition(
             JointConstants.Mechanical.REDUCTION
         ))
         inputs.jointTargetPosition.mut_replace(jointTargetPosition)
         inputs.jointManualTargetPosition.mut_replace(jointManualTargetPosition)
 
-        inputs.isLeadMotorConnected = leadMotorController.getIsConnected()
-        inputs.leadMotorPosition.mut_replace(leadMotorController.getPosition())
-        inputs.leadMotorVelocity.mut_replace(leadMotorController.getVelocity())
-        inputs.leadMotorTemperature.mut_replace(leadMotorController.getTemperature())
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorController.getOutputVoltage())
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorController.getSupplyCurrent())
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorController.getTorqueCurrent())
-
-        inputs.isFollowerMotorConnected = followerMotorController.getIsConnected()
-        inputs.followerMotorPosition.mut_replace(followerMotorController.getPosition())
-        inputs.followerMotorVelocity.mut_replace(followerMotorController.getVelocity())
-        inputs.followerMotorTemperature.mut_replace(followerMotorController.getTemperature())
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorController.getOutputVoltage())
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorController.getSupplyCurrent())
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorController.getTorqueCurrent())
+        leadMotorController.updateInputs(leadMotorInputs)
+        followerMotorController.updateInputs(followerMotorInputs)
     }
 
     override fun updateJointManualPosition(newJointPosition: Angle) {

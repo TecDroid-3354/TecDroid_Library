@@ -1,13 +1,10 @@
 package frc.tecdroid3354.subsystems.angularPosition;
 
 import edu.wpi.first.units.measure.*;
+import frc.tecdroid3354.utils.interfaces.MotorIO;
 import org.littletonrobotics.junction.AutoLog;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.Volts;
 
 /**
  * I/O (Input/Output) interface intended for any {@link Angle} driven subsystem, i.e. a Joint.
@@ -52,24 +49,6 @@ public interface JointIO {
         public MutAngle jointActualPosition = Degrees.mutable(0.0);
         public MutAngle jointTargetPosition = Degrees.mutable(0.0);
         public MutAngle jointManualTargetPosition = Degrees.mutable(0.0);
-
-        /** Lead motor wise fields */
-        public boolean isLeadMotorConnected = false;
-        public MutAngle leadMotorPosition = Degrees.mutable(0.0);
-        public MutAngularVelocity leadMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutTemperature leadMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage leadMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent leadMotorSupplyCurrent = Amps.mutable(0.0);  // Current supplied from battery
-        public MutCurrent leadMotorTorqueCurrent = Amps.mutable(0.0);  // Reflects the physical load
-
-        /** Follower motor wise fields (duplicate for number of followers, or delete if not applicable) */
-        public boolean isFollowerMotorConnected = false;
-        public MutAngle followerMotorPosition = Degrees.mutable(0.0);
-        public MutAngularVelocity followerMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutTemperature followerMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage followerMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent followerMotorSupplyCurrent = Amps.mutable(0.0);   // Current supplied from battery
-        public MutCurrent followerMotorTorqueCurrent = Amps.mutable(0.0);   // Reflects the physical load
     }
 
     /**
@@ -77,7 +56,8 @@ public interface JointIO {
      * Might change depending on the implementation (i.e. simulation does not need to check motors' connectivity).
      * @param inputs The generated {@link JointIOInputs} object keeping track of everything.
      */
-    void updateJointInputs(JointIOInputs inputs);
+    void updateJointInputs(JointIOInputs inputs,
+                           MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs);
 
     /**
      * Used to update the in-file variable containing the manual target position. This resets with every code reload.
@@ -146,7 +126,8 @@ public interface JointIO {
     class DummyJointIO implements JointIO {
 
         @Override
-        public void updateJointInputs(JointIOInputs inputs) {
+        public void updateJointInputs(JointIOInputs inputs,
+                                      MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs) {
 
         }
 

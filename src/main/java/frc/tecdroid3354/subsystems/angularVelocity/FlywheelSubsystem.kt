@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
+import frc.tecdroid3354.utils.devices.MotorIOs.MotorIOInputsAutoLogged
 import frc.tecdroid3354.utils.meters
 import frc.tecdroid3354.utils.rotationsPerMinute
 import org.littletonrobotics.junction.Logger
@@ -16,6 +17,8 @@ import kotlin.math.pow
 class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelConstants.Telemetry.SUBSYSTEM_TAB) {
     // Auto generated file (by @AutoLog annotation in IO Layer)
     private val inputs: FlywheelIOInputsAutoLogged = FlywheelIOInputsAutoLogged()
+    private val leadMotorInputs: MotorIOInputsAutoLogged = MotorIOInputsAutoLogged()
+    private val followerMotorInputs: MotorIOInputsAutoLogged = MotorIOInputsAutoLogged()
 
     /**
      * START OF CONNECTION ALERT VARIABLES. These alerts are published separately from other inputs.
@@ -43,14 +46,16 @@ class FlywheelSubsystem(private val io: FlywheelIO) : SubsystemBase(FlywheelCons
      */
     override fun periodic() {
         // IMPORTANT: This must be the first line in periodic() so that all other methods work with fresh data.
-        io.updateFlywheelInputs(inputs)
+        io.updateFlywheelInputs(inputs, leadMotorInputs, followerMotorInputs)
 
         // Logs every field to the specified directory. It can be seen live through Elastic & AdvantageScope.
         Logger.processInputs(FlywheelConstants.Telemetry.SUBSYSTEM_TAB, inputs)
+        Logger.processInputs(FlywheelConstants.Telemetry.LEAD_MOTOR_INPUTS_TAB, leadMotorInputs)
+        Logger.processInputs(FlywheelConstants.Telemetry.FOLLOWER_MOTOR_INPUTS_TAB, followerMotorInputs)
 
         // Update motor alerts based on inputs.
-        leadMotorConnectionAlert.set(inputs.isLeadMotorConnected)
-        followerMotorConnectionAlert.set(inputs.isFollowerMotorConnected)
+        leadMotorConnectionAlert.set(leadMotorInputs.isConnected.not())
+        followerMotorConnectionAlert.set(followerMotorInputs.isConnected.not())
 
         // Check if ControlGains coefficients were changed live and update the motors.
         if (SubsystemsControlGains.FLYWHEEL_MOTOR_PRIMARY_GAINS.hadTunableUpdated()) {

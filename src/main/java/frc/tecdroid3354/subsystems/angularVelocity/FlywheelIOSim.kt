@@ -11,12 +11,11 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.MutAngularVelocity
 import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import frc.tecdroid3354.constants.RobotConstants
-import frc.tecdroid3354.constants.SimConstants
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
-import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import frc.tecdroid3354.utils.kilogramSquareMeters
 import frc.tecdroid3354.utils.seconds
@@ -53,8 +52,8 @@ class FlywheelIOSim : FlywheelIO {
     private val manualFlywheelVelocityTarget: MutAngularVelocity = DegreesPerSecond.mutable(0.0)
     private val flywheelVelocityTarget: MutAngularVelocity = DegreesPerSecond.mutable(0.0)
 
-    @Suppress("DuplicatedCode")
-    override fun updateFlywheelInputs(inputs: FlywheelIO.FlywheelIOInputs) {
+    override fun updateFlywheelInputs(inputs: FlywheelIO.FlywheelIOInputs,
+                                      leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs) {
         //
         // START PHYSICS UPDATE
         //
@@ -86,21 +85,8 @@ class FlywheelIOSim : FlywheelIO {
         inputs.flywheelManualTargetVelocity.mut_replace(manualFlywheelVelocityTarget)
         inputs.flywheelPresetVelocity.mut_replace(SubsystemsPresetTargets.FLYWHEEL_PRESET_RPM)
 
-        inputs.isLeadMotorConnected = true
-        inputs.leadMotorVelocity.mut_replace(motorVelocity)
-        inputs.leadMotorAcceleration.mut_replace(motorAcceleration)
-        inputs.leadMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorSim.motorVoltageMeasure)
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorSim.supplyCurrentMeasure)
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorSim.torqueCurrentMeasure)
-
-        inputs.isFollowerMotorConnected = true
-        inputs.followerMotorVelocity.mut_replace(if (inverseMotorReading) motorVelocity.unaryMinus() else motorVelocity)
-        inputs.followerMotorAcceleration.mut_replace(if (inverseMotorReading) motorAcceleration.unaryMinus() else motorAcceleration)
-        inputs.followerMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorSim.motorVoltageMeasure)
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorSim.supplyCurrentMeasure)
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorSim.torqueCurrentMeasure)
+        leadMotorReal.updateInputs(leadMotorInputs)
+        followerMotorReal.updateInputs(followerMotorInputs)
     }
 
     override fun updateFlywheelManualVelocity(newFlywheelManualVelocity: AngularVelocity) {

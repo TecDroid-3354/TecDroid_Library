@@ -20,6 +20,7 @@ import frc.tecdroid3354.constants.CanBuses
 import frc.tecdroid3354.constants.RobotTelemetry
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
+import frc.tecdroid3354.subsystems.angularPosition.JointConstants
 import frc.tecdroid3354.utils.mechanical.Reduction
 import frc.tecdroid3354.utils.Sprocket
 import frc.tecdroid3354.utils.amps
@@ -94,6 +95,8 @@ object ElevatorConstants {
      */
     object Telemetry {
         const val SUBSYSTEM_TAB                         : String = "Elevator"
+        const val LEAD_MOTOR_INPUTS_TAB                 : String = "${SUBSYSTEM_TAB}/Lead Motor"
+        const val FOLLOWER_MOTOR_INPUTS_TAB             : String = "${SUBSYSTEM_TAB}/Follower Motor"
         const val SUBSYSTEM_PRIMARY_GAINS               : String = "$SUBSYSTEM_TAB Primary Gains"
         const val LEAD_MOTOR_CONNECTION_ALERT_TAB       : String =
             "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${Identification.ELEVATOR_CANBUS_NAME}" +

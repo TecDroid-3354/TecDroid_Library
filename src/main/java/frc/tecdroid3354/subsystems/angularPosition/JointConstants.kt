@@ -97,8 +97,12 @@ object JointConstants {
      * easier alert visualization in Elastic.
      */
     object Telemetry {
-        const val SUBSYSTEM_TAB: String = "Joint"
+        const val SUBSYSTEM_TAB                         : String = "Joint"
+        const val LEAD_MOTOR_INPUTS_TAB                 : String = "${SUBSYSTEM_TAB}/Lead Motor"
+        const val FOLLOWER_MOTOR_INPUTS_TAB             : String = "${SUBSYSTEM_TAB}/Follower Motor"
+
         const val SUBSYSTEM_PRIMARY_GAINS               : String = "$SUBSYSTEM_TAB Primary Gains"
+
         const val LEAD_MOTOR_CONNECTION_ALERT_TAB       : String =
             "${RobotTelemetry.CONNECTION_ALERTS_TAB}/${Identification.JOINT_CANBUS_NAME}" +
                     "/${SUBSYSTEM_TAB} Motor id=${Identification.LEAD_MOTOR_ID}"

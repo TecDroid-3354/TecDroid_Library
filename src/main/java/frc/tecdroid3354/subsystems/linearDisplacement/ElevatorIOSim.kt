@@ -12,13 +12,13 @@ import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.MutDistance
 import edu.wpi.first.wpilibj.simulation.ElevatorSim
 import frc.tecdroid3354.constants.RobotConstants
-import frc.tecdroid3354.constants.SimConstants
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.subsystems.linearDisplacement.ElevatorConstants.Mechanical
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import frc.tecdroid3354.utils.kilograms
 import frc.tecdroid3354.utils.meters
@@ -76,7 +76,8 @@ class ElevatorIOSim: ElevatorIO {
     private val elevatorTargetDisplacement      : MutDistance = Meters.mutable(0.0)
     private val elevatorManualTargetDisplacement: MutDistance = Meters.mutable(0.0)
 
-    override fun updateElevatorInputs(inputs: ElevatorIO.ElevatorIOInputs) {
+    override fun updateElevatorInputs(inputs: ElevatorIO.ElevatorIOInputs,
+                                      leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs) {
         //
         // START OF PHYSICS UPDATE
         //
@@ -112,22 +113,8 @@ class ElevatorIOSim: ElevatorIO {
         inputs.elevatorTargetDisplacement.mut_replace(elevatorTargetDisplacement)
         inputs.elevatorManualTargetDisplacement.mut_replace(elevatorManualTargetDisplacement)
 
-        inputs.isLeadMotorConnected = true // Not like a cable is gonna disconnect during simulation
-        inputs.leadMotorPosition.mut_replace(motorPosition)
-        inputs.leadMotorVelocity.mut_replace(motorVelocity)
-        inputs.leadMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorSim.motorVoltageMeasure)
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorSim.supplyCurrentMeasure)
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorSim.torqueCurrentMeasure)
-
-        inputs.isFollowerMotorConnected = true
-        inputs.followerMotorPosition.mut_replace(if (inverseMotorReading) motorPosition.unaryMinus() else motorPosition)
-        inputs.followerMotorVelocity.mut_replace(if (inverseMotorReading) motorVelocity.unaryMinus() else motorVelocity)
-        inputs.followerMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorSim.motorVoltageMeasure)
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorSim.supplyCurrentMeasure)
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorSim.torqueCurrentMeasure)
-
+        leadMotorReal.updateInputs(leadMotorInputs)
+        followerMotorReal.updateInputs(followerMotorInputs)
     }
 
     override fun updateElevatorManualDisplacement(newElevatorManualDisplacement: Distance) {

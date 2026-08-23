@@ -11,13 +11,13 @@ import edu.wpi.first.units.measure.MutAngle
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim
 import frc.tecdroid3354.constants.RobotConstants
 import frc.tecdroid3354.constants.RobotDimensions
-import frc.tecdroid3354.constants.SimConstants
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsControlRequests
 import frc.tecdroid3354.constants.SubsystemsMotionTargets
 import frc.tecdroid3354.constants.SubsystemsMovementLimits
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.subsystems.angularVelocity.FlywheelConstants
+import frc.tecdroid3354.utils.interfaces.MotorIO
 import frc.tecdroid3354.utils.devices.OpTalonFX
 import frc.tecdroid3354.utils.kilogramSquareMeters
 import frc.tecdroid3354.utils.meters
@@ -61,7 +61,8 @@ class JointIOSim: JointIO {
     private val jointManualTargetPosition: MutAngle = Degrees.mutable(0.0)
 
     @Suppress("DuplicatedCode")
-    override fun updateJointInputs(inputs: JointIO.JointIOInputs) {
+    override fun updateJointInputs(inputs: JointIO.JointIOInputs,
+                                   leadMotorInputs: MotorIO.MotorIOInputs, followerMotorInputs: MotorIO.MotorIOInputs)  {
         //
         // START PHYSICS UPDATE
         //
@@ -93,21 +94,8 @@ class JointIOSim: JointIO {
         inputs.jointTargetPosition.mut_replace(jointTargetPosition)
         inputs.jointManualTargetPosition.mut_replace(jointManualTargetPosition)
 
-        inputs.isLeadMotorConnected = true
-        inputs.leadMotorPosition.mut_replace(motorPosition)
-        inputs.leadMotorVelocity.mut_replace(motorVelocity)
-        inputs.leadMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.leadMotorOutputVoltage.mut_replace(leadMotorSim.motorVoltageMeasure)
-        inputs.leadMotorSupplyCurrent.mut_replace(leadMotorSim.supplyCurrentMeasure)
-        inputs.leadMotorTorqueCurrent.mut_replace(leadMotorSim.torqueCurrentMeasure)
-
-        inputs.isFollowerMotorConnected = true
-        inputs.followerMotorPosition.mut_replace(motorPositionFollower)
-        inputs.followerMotorVelocity.mut_replace(motorVelocityFollower)
-        inputs.followerMotorTemperature.mut_replace(SimConstants.NEUTRAL_MOTOR_TEMPERATURE)
-        inputs.followerMotorOutputVoltage.mut_replace(followerMotorSim.motorVoltageMeasure)
-        inputs.followerMotorSupplyCurrent.mut_replace(followerMotorSim.supplyCurrentMeasure)
-        inputs.followerMotorTorqueCurrent.mut_replace(followerMotorSim.torqueCurrentMeasure)
+        leadMotorReal.updateInputs(leadMotorInputs)
+        followerMotorReal.updateInputs(followerMotorInputs)
     }
 
     override fun updateJointManualPosition(newJointPosition: Angle) {

@@ -1,6 +1,7 @@
 package frc.tecdroid3354.subsystems.linearDisplacement;
 
 import edu.wpi.first.units.measure.*;
+import frc.tecdroid3354.utils.interfaces.MotorIO;
 import org.littletonrobotics.junction.AutoLog;
 
 import static edu.wpi.first.units.Units.*;
@@ -48,24 +49,6 @@ public interface ElevatorIO {
         public MutDistance elevatorDisplacement = Meters.mutable(0.0);          // Actual Displacement
         public MutDistance elevatorTargetDisplacement = Meters.mutable(0.0);    // Setpoint / Target
         public MutDistance elevatorManualTargetDisplacement = Meters.mutable(0.0); // Manually set live
-
-        /** Lead motor wise fields */
-        public boolean isLeadMotorConnected = false;                                // signalsRespond ? true : false
-        public MutAngle leadMotorPosition = Degrees.mutable(0.0);
-        public MutAngularVelocity leadMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutTemperature leadMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage leadMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent leadMotorSupplyCurrent = Amps.mutable(0.0);   // Current supplied to the motor
-        public MutCurrent leadMotorTorqueCurrent = Amps.mutable(0.0); // Reflects the physical load
-
-        /** Follower motor wise fields */
-        public boolean isFollowerMotorConnected = false;                             // signalsRespond ? true : false
-        public MutAngle followerMotorPosition = Degrees.mutable(0.0);
-        public MutAngularVelocity followerMotorVelocity = DegreesPerSecond.mutable(0.0);
-        public MutTemperature followerMotorTemperature = Celsius.mutable(0.0);
-        public MutVoltage followerMotorOutputVoltage = Volts.mutable(0.0);
-        public MutCurrent followerMotorSupplyCurrent = Amps.mutable(0.0);   // Current supplied to the motor
-        public MutCurrent followerMotorTorqueCurrent = Amps.mutable(0.0); // Reflects the physical load
     }
 
     /**
@@ -73,7 +56,8 @@ public interface ElevatorIO {
      * Might change depending on the implementation (i.e. simulation does not need to check motors' connectivity).
      * @param inputs The generated {@link ElevatorIOInputsAutoLogged} object keeping track of everything.
      */
-    void updateElevatorInputs(ElevatorIOInputs inputs);
+    void updateElevatorInputs(ElevatorIOInputs inputs,
+                              MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs);
 
     /**
      * Used to update the in-file variable containing the manual target displacement. This resets with every code reload.
@@ -135,7 +119,8 @@ public interface ElevatorIO {
     class DummyElevatorIO implements ElevatorIO {
 
         @Override
-        public void updateElevatorInputs(ElevatorIOInputs inputs) {
+        public void updateElevatorInputs(ElevatorIOInputs inputs,
+                                         MotorIO.MotorIOInputs leadMotorInputs, MotorIO.MotorIOInputs followerMotorInputs) {
 
         }
 
