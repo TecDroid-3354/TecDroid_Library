@@ -10,10 +10,9 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
-import frc.tecdroid3354.utils.devices.MotorIOs.MotorIOInputsAutoLogged
 import frc.tecdroid3354.utils.inches
+import frc.tecdroid3354.utils.interfaces.MotorIOInputsAutoLogged
 import org.littletonrobotics.junction.Logger
-import java.util.function.Supplier
 
 /**
  * Intended to act as a bridge between the I/O layer and the rest of the program.

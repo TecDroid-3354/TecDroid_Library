@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.InstantCommandIgnoreDisabled
-import frc.tecdroid3354.utils.devices.MotorIOs.MotorIOInputsAutoLogged
+import frc.tecdroid3354.utils.interfaces.MotorIOInputsAutoLogged
 import frc.tecdroid3354.utils.meters
 import frc.tecdroid3354.utils.rotationsPerMinute
 import org.littletonrobotics.junction.Logger

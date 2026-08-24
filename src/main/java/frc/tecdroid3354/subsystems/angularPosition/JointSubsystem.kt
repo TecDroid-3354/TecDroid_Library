@@ -7,7 +7,7 @@ import frc.tecdroid3354.constants.SubsystemsControlGains
 import frc.tecdroid3354.constants.SubsystemsPresetTargets
 import frc.tecdroid3354.constants.SubsystemsTunableTargets
 import frc.tecdroid3354.utils.degrees
-import frc.tecdroid3354.utils.devices.MotorIOs.MotorIOInputsAutoLogged
+import frc.tecdroid3354.utils.interfaces.MotorIOInputsAutoLogged
 import org.littletonrobotics.junction.Logger
 
 class JointSubsystem(private val io: JointIO): SubsystemBase(JointConstants.Telemetry.SUBSYSTEM_TAB) {
