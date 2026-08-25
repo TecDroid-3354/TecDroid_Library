@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import frc.tecdroid3354.RobotVisualizer
@@ -53,7 +54,7 @@ import java.util.Optional
  */
 object RobotContainer
 {
-    private val driverController = CommandXboxController(RobotConstants.MAIN_CONTROLLER_PORT)
+    private val driverController = CommandPS5Controller(RobotConstants.MAIN_CONTROLLER_PORT)
     // ALL interactions (with maple sim drive exception) with subsystems will be done through this object.
     private val superstructure: Superstructure
 
@@ -144,14 +145,14 @@ object RobotContainer
                 .onFalse(superstructure.homeArm())
         }
 
-        driverController.start()
+        driverController.options() // Equivalent to Xbox .start()
             .onTrue(superstructure.resetOdometryHeading(Optional.empty()))
 
-        driverController.a()
+        driverController.square() // Equivalent to Xbox .a()
             .whileTrue(superstructure.setArmManualControl())
             .onFalse(superstructure.homeArm())
 
-        driverController.leftTrigger()
+        driverController.L2() // Equivalent to .leftTrigger()
             .whileTrue(superstructure.setDriveTargetingCommand(
                 { if (IS_RED_ALLIANCE.asBoolean) TargetTranslations.RED_HUB else TargetTranslations.BLUE_HUB }
             ))

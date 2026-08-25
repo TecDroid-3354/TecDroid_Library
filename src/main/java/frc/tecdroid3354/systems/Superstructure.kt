@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import frc.tecdroid3354.commands.DriveCommands
 import frc.tecdroid3354.constants.DriveMultipliers
@@ -32,7 +33,7 @@ import java.util.function.Supplier
 
 /** Inside this class, construct all control methods at robot-level (and any relevant auxiliary methods).
  * When using States, this file is responsible to control the logic flow */
-class Superstructure(private val controller: CommandXboxController,
+class Superstructure(private val controller: CommandPS5Controller,
                      private val simDrive: SwerveDriveSimulation, private val drive: Drive,
                      private val joint: JointSubsystem, private val elevator: ElevatorSubsystem,
                      private val flywheel: FlywheelSubsystem, private val vision: Vision): SubsystemBase("Superstructure") {
